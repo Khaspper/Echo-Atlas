@@ -6,3 +6,4 @@
 - **Axios**: For making HTTP requests.
 - **D3.js** (or React Flow): For graph visualization.
 - **ESLint**: For maintaining code quality.
+- **icons8.com**: For icons (Github, LinkedIn and Gmail).
