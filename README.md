@@ -4,6 +4,6 @@
 - **TypeScript**: For adding static typing to JavaScript.
 - **Tailwind CSS**: For utility-first styling.
 - **Axios**: For making HTTP requests.
-- **D3.js** (or React Flow): For graph visualization.
+- **D3.js**: For graph visualization.
 - **ESLint**: For maintaining code quality.
 - **icons8.com**: For icons (Github, LinkedIn and Gmail).

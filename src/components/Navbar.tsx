@@ -65,7 +65,8 @@ const Navbar = () => {
         </button>
 
         {/* LinkedIn Page */}
-        <button onClick={() => window.open('https://www.linkedin.com/in/mark-narciso-79a030247/', '_blank')} className='button w-16 h-12 bg-[#0288D1] rounded-lg cursor-pointer select-none
+        <button onClick={() => window.open('https://www.linkedin.com/in/mark-narciso-79a030247/', '_blank')} 
+          className='button w-16 h-12 bg-[#0288D1] rounded-lg cursor-pointer select-none
           active:translate-y-2 active:[box-shadow:0_0px_0_0_#0267ba,0_0px_0_0_#1b70f841]
           active:border-b-[0px]
           transition-all duration-150 [box-shadow:0_10px_0_0_#0267ba,0_15px_0_0_#1b70f841]
