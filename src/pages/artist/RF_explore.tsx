@@ -85,7 +85,18 @@ export default function ArtistPage() {
       {/* Main Content Area */}
       <div className="flex-grow flex h-full">
         {/* Artist Graph Section */}
-        Place holder
+        {/* <ArtistGraph
+          selectedArtist={selectedArtist || ''}
+          relatedArtists={
+            selectedArtist
+              ? relatedArtists.map((artist) => ({
+                  name: artist.name,
+                  photoUrl: "https://via.placeholder.com/100",
+                  similarityScore: artist.similarityScore,
+                }))
+              : []
+          }
+        /> */}
       </div>
     </div>
   );
