@@ -4,11 +4,13 @@ import * as d3 from "d3";
 interface ArtistGraphProps {
   selectedArtist: string;
   relatedArtists: { name: string; similarityScore: number; photoUrl: string }[];
+  centerArtistPhoto: string | null; // Add this prop for the central artist's photo
 }
 
 export default function ArtistGraph({
   selectedArtist,
   relatedArtists,
+  centerArtistPhoto,
 }: ArtistGraphProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
 
@@ -43,102 +45,77 @@ export default function ArtistGraph({
     // Apply zoom behavior to the SVG element
     svgSelection.call(zoom).style("cursor", "grab");
 
-    // Add central node for the searched artist
+    // Add central node for the selected artist
     const centralNode = svgGroup
       .append("g")
       .attr("transform", `translate(${width / 2}, ${height / 2})`);
 
-    // Add central artist's circle
+    // Add central artist's photo
     centralNode
-      .append("circle")
-      .attr("r", 80)
-      .attr("fill", "#4caf50")
-      .attr("stroke", "#333")
-      .attr("stroke-width", 2);
+      .append("image")
+      .attr("href", centerArtistPhoto || "https://via.placeholder.com/150") // Use the passed central artist photo
+      .attr("x", -80) // Adjust position to center the image
+      .attr("y", -80)
+      .attr("width", 160)
+      .attr("height", 160)
+      .attr("preserveAspectRatio", "xMidYMid slice")
+      .attr("clip-path", "circle(80px at center)");
 
     // Add central artist's name
     centralNode
       .append("text")
       .text(selectedArtist)
       .attr("text-anchor", "middle")
-      .attr("y", 4)
+      .attr("y", 100) // Position text below the image
       .style("font-size", "16px")
       .style("font-weight", "bold")
-      .style("fill", "#fff");
+      .style("fill", "#333");
 
-    // Add nodes for related artists that smoothly move to their positions
-    const angleStep = (2 * Math.PI) / relatedArtists.length;
+    // Add nodes for related artists
+    const angleStep = (2 * Math.PI) / relatedArtists.length; // Spread nodes evenly
     const maxDistance = 1000; // Maximum distance from the center
 
     relatedArtists.forEach((artist, index) => {
-      const angle = angleStep * index;
-      const distance = maxDistance * (1 - artist.similarityScore); // Distance based on similarity score
-      const overshootFactor = 1.3; // Overshoot distance as a multiplier
-      const overshootDistance = distance * overshootFactor;
+      // Check and adjust similarity score
+      let adjustedSimilarityScore = artist.similarityScore;
+      if (artist.similarityScore >= 0.9 && artist.similarityScore <= 1) {
+        adjustedSimilarityScore = 0.95;
+      }
 
-      // Create a group for each related artist starting at the center
+      const angle = angleStep * index;
+      const distance = (maxDistance * (1 - adjustedSimilarityScore)) * 2.5; // Distance based on adjusted similarity score
+
+      // Create a group for each related artist
       const nodeGroup = svgGroup
         .append("g")
-        .attr("transform", `translate(${width / 2}, ${height / 2})`);
+        .attr(
+          "transform",
+          `translate(${width / 2 + Math.cos(angle) * distance}, ${
+            height / 2 + Math.sin(angle) * distance
+          })`
+        );
 
-      // Add circular node for related artist
+      // Add artist's photo as the node
       nodeGroup
-        .append("circle")
-        .attr("r", 50)
-        .attr("fill", "#2196f3")
-        .attr("stroke", "#333")
-        .attr("stroke-width", 1.5);
+        .append("image")
+        .attr("href", artist.photoUrl || "https://via.placeholder.com/150") // Fallback to placeholder if no image
+        .attr("x", -40) // Adjust position to center the image
+        .attr("y", -40)
+        .attr("width", 80)
+        .attr("height", 80)
+        .attr("preserveAspectRatio", "xMidYMid slice")
+        .attr("clip-path", "circle(40px at center)");
 
-      // Add artist name inside the circle
+      // Add artist name below the photo
       nodeGroup
         .append("text")
         .text(artist.name)
         .attr("text-anchor", "middle")
-        .attr("y", 4)
+        .attr("y", 50) // Position text below the image
         .style("font-size", "12px")
-        .style("fill", "#fff");
-
-      // Initial overshooting movement
-      nodeGroup
-        .transition()
-        .duration(1000)
-        .ease(d3.easeCubicOut)
-        .attr("transform", `translate(${width / 2 + Math.cos(angle) * overshootDistance}, ${height / 2 + Math.sin(angle) * overshootDistance})`)
-        .on("end", () => {
-          // Rubber-banding effect to their designated positions
-          let velocityX = 0; // Initial velocity
-          let velocityY = 0;
-          const damping = 0.95; // Slow down over time
-          const springStrength = 0.05; // Rubber-banding strength
-
-          d3.timer(() => {
-            const transformAttr = nodeGroup.attr("transform");
-            if (!transformAttr) return true; // Stop if transform is null
-
-            const match = transformAttr.match(/translate\(([^,]+), ([^)]+)\)/);
-            if (!match) return true; // Stop if match is null
-
-            const x = parseFloat(match[1]);
-            const y = parseFloat(match[2]);
-
-            const dx = width / 2 + Math.cos(angle) * distance - x;
-            const dy = height / 2 + Math.sin(angle) * distance - y;
-
-            velocityX += dx * springStrength;
-            velocityY += dy * springStrength;
-            velocityX *= damping;
-            velocityY *= damping;
-
-            const newX = x + velocityX;
-            const newY = y + velocityY;
-
-            nodeGroup.attr("transform", `translate(${newX}, ${newY})`);
-
-            return Math.abs(dx) < 1 && Math.abs(dy) < 1 && Math.abs(velocityX) < 0.1 && Math.abs(velocityY) < 0.1; // Stop timer when settled
-          });
-        });
+        .style("fill", "#333");
     });
-  }, [selectedArtist, relatedArtists]);
+  }, [selectedArtist, relatedArtists, centerArtistPhoto]);
 
   return <svg ref={svgRef}></svg>;
 }
