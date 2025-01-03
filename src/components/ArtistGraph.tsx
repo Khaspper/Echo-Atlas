@@ -4,7 +4,7 @@ import * as d3 from "d3";
 interface ArtistGraphProps {
   selectedArtist: string;
   relatedArtists: { name: string; similarityScore: number; photoUrl: string }[];
-  centerArtistPhoto: string | null; // Add this prop for the central artist's photo
+  centerArtistPhoto: string | null;
 }
 
 export default function ArtistGraph({
@@ -28,10 +28,8 @@ export default function ArtistGraph({
       .attr("viewBox", `0 0 ${width} ${height}`)
       .style("background-color", "#f9f9f9");
 
-    // Clear existing graph
+    // Clear existing graph this is so when ever the user searches up another name
     svgSelection.selectAll("*").remove();
-
-    // Append a group to contain all graph elements
     const svgGroup = svgSelection.append("g");
 
     // Set up zoom behavior
@@ -72,7 +70,7 @@ export default function ArtistGraph({
       .style("fill", "#333");
 
     // Add nodes for related artists
-    const angleStep = (2 * Math.PI) / relatedArtists.length; // Spread nodes evenly
+    const angleStep = (2 * Math.PI) / relatedArtists.length; // Spread nodes around the central node
     const maxDistance = 1000; // Maximum distance from the center
 
     relatedArtists.forEach((artist, index) => {
@@ -83,7 +81,7 @@ export default function ArtistGraph({
       }
 
       const angle = angleStep * index;
-      const distance = (maxDistance * (1 - adjustedSimilarityScore)) * 1; // Distance based on adjusted similarity score
+      const distance = (maxDistance * (1 - adjustedSimilarityScore)) * 1.5; // Distance based on adjusted similarity score
 
       // Create a group for each related artist
       const nodeGroup = svgGroup

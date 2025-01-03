@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import SearchBar from '../../components/SearchBar';
 import ArtistGraph from '../../components/ArtistGraph';
 import { fetchRelatedArtists } from '../../services/lastfm';
-import { fetchArtistDetails } from '../../services/spotify'; // Ensure Spotify service is imported
+import { fetchArtistDetails } from '../../services/spotify';
 
 export default function ArtistPage() {
   const [selectedArtist, setSelectedArtist] = useState<string | null>(null);
-  const [artistPhoto, setArtistPhoto] = useState<string | null>(null); // State for the central artist's photo
+  const [artistPhoto, setArtistPhoto] = useState<string | null>(null);
   const [relatedArtists, setRelatedArtists] = useState<
     { name: string; similarityScore: number; photoUrl: string }[]
   >([]);
@@ -21,8 +21,25 @@ export default function ArtistPage() {
       setArtistPhoto(artistDetails.imageURL || 'https://via.placeholder.com/150'); // Default photo if none found
 
       // Fetch related artists from Last.fm
-      const artists = await fetchRelatedArtists(artistName);
-      setRelatedArtists(artists);
+      const artistsFromLastFm = await fetchRelatedArtists(artistName);
+
+      // Fetch photos for each related artist from Spotify
+      const updatedRelatedArtists = await Promise.all(
+        artistsFromLastFm.map(async (artist: { name: string; similarityScore: number; photoUrl: string }) => {
+          try {
+            const details = await fetchArtistDetails(artist.name);
+            return {
+              ...artist,
+              photoUrl: details.imageURL || artist.photoUrl, // Use Spotify photo if available, fallback to Last.fm
+            };
+          } catch (error) {
+            console.error(`Error fetching details for ${artist.name}:`, error);
+            return artist; // Return the artist as is if Spotify API fails
+          }
+        })
+      );
+
+      setRelatedArtists(updatedRelatedArtists);
     } catch (error) {
       console.error(error);
       alert('Could not find the artist or related data. Try a different search.');
@@ -60,7 +77,7 @@ export default function ArtistPage() {
           <ArtistGraph
             selectedArtist={selectedArtist}
             relatedArtists={relatedArtists}
-            centerArtistPhoto={artistPhoto} // Pass the central artist's photo
+            centerArtistPhoto={artistPhoto}
           />
         ) : (
           <div className="flex justify-center items-center h-full">

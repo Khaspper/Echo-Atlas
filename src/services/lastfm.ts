@@ -13,7 +13,7 @@ export const fetchRelatedArtists = async (artistName: string) => {
         artist: artistName,
         api_key: API_KEY,
         format: 'json',
-        limit: 10, // Fetch only top 20 similar artists
+        limit: 20, //! Number of artists to fetch
       },
     });
 
@@ -21,16 +21,18 @@ export const fetchRelatedArtists = async (artistName: string) => {
     let formattedArtists = similarArtists.map((artist: any) => ({
       name: artist.name,
       photoUrl: artist.image?.[2]?.['#text'] || 'https://via.placeholder.com/60?text=Artist', // Use medium-sized image
-      similarityScore: parseFloat(artist.match || 0), // Optional, depends on Last.fm's response
+      similarityScore: parseFloat(artist.match || 0),
     }));
 
-    // Randomize the array using Fisher-Yates Shuffle
+    // Randomize the array using Fisher-Yates Shuffle :P
+    //! I did this because lastfms API returns the similarity score in order and when
+    //! I put it on the screen it looks like a spiral
     for (let i = formattedArtists.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [formattedArtists[i], formattedArtists[j]] = [formattedArtists[j], formattedArtists[i]];
     }
 
-    // Log the randomized array
+    //! Debugging
     console.log('Randomized related artists:', formattedArtists);
 
     return formattedArtists;
