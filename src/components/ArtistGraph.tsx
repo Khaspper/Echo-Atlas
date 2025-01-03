@@ -79,11 +79,11 @@ export default function ArtistGraph({
       // Check and adjust similarity score
       let adjustedSimilarityScore = artist.similarityScore;
       if (artist.similarityScore >= 0.9 && artist.similarityScore <= 1) {
-        adjustedSimilarityScore = 0.95;
+        adjustedSimilarityScore = 0.85;
       }
 
       const angle = angleStep * index;
-      const distance = (maxDistance * (1 - adjustedSimilarityScore)) * 2.5; // Distance based on adjusted similarity score
+      const distance = (maxDistance * (1 - adjustedSimilarityScore)) * 1; // Distance based on adjusted similarity score
 
       // Create a group for each related artist
       const nodeGroup = svgGroup
