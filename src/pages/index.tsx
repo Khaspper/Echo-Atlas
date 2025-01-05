@@ -25,8 +25,9 @@ export default function Home() {
             transition-all duration-150 [box-shadow:0_10px_0_0_#701bf8,0_15px_0_0_#1b70f841]
             border-b-[1px] border-violet-400"
         >
+          {/* What name should I use for this? */}
           <span className="flex flex-col justify-center items-center h-full text-white font-bold text-lg">
-            Explore Artists
+            Artist Card
           </span>
         </button>
         {/* Similar Songs */}

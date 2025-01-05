@@ -70,6 +70,10 @@ export default function ArtistGraph({
       .style("fill", "#333");
 
     // Add nodes for related artists with animation
+    //! Joesphs idea: Change the size of the node based on the similarity score!!!!!!!!!!!
+    //! Joesphs idea: Dragable nodes goes back to the designated spot after release
+    //! Joesphs idea: If circle is clicked mini artist card is popped up
+    //! Joesphs idea: Get sample of their songs
     const angleStep = (2 * Math.PI) / relatedArtists.length;
     const maxDistance = 1000;
 

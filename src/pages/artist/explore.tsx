@@ -15,10 +15,27 @@ export default function ArtistPage() {
   const handleArtistSearch = async (artistName: string) => {
     setLoading(true);
     try {
-      // Fetch central artist details from Spotify
+      // Check if artist data already exists in the database
+      const response = await fetch(`/api/get-artists`);
+      const data = await response.json();
+      const cachedArtist = data.find(
+        (artist: { name: string }) => artist.name.toLowerCase() === artistName.toLowerCase()
+      );
+
+      if (cachedArtist) {
+        // If artist is found in the database, use that data
+        // Maybe eventually just save each artist once? idk the data redundancy is crazy!!!!
+        setSelectedArtist(cachedArtist.name);
+        setArtistPhoto(cachedArtist.photoUrl);
+        setRelatedArtists(cachedArtist.relatedArtists);
+        setLoading(false);
+        return; 
+      }
+
+      // Fetch central artist details from Spotify if not found in the database
       const artistDetails = await fetchArtistDetails(artistName);
       setSelectedArtist(artistDetails.name);
-      setArtistPhoto(artistDetails.imageURL || 'https://via.placeholder.com/150'); // Default photo if none found
+      setArtistPhoto(artistDetails.imageURL || 'https://via.placeholder.com/150'); 
 
       // Fetch related artists from Last.fm
       const artistsFromLastFm = await fetchRelatedArtists(artistName);
@@ -30,14 +47,27 @@ export default function ArtistPage() {
             const details = await fetchArtistDetails(artist.name);
             return {
               ...artist,
-              photoUrl: details.imageURL || artist.photoUrl, // Use Spotify photo if available, fallback to Last.fm
+              photoUrl: details.imageURL || artist.photoUrl, 
             };
           } catch (error) {
             console.error(`Error fetching details for ${artist.name}:`, error);
-            return artist; // Return the artist as is if Spotify API fails
+            return artist;
           }
         })
       );
+
+      // Save the newly fetched artist and related artists data to the database
+      await fetch('/api/save-artist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: artistDetails.name,
+          photoUrl: artistDetails.imageURL,
+          relatedArtists: updatedRelatedArtists,
+        }),
+      });
 
       setRelatedArtists(updatedRelatedArtists);
     } catch (error) {

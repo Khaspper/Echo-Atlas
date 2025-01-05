@@ -13,7 +13,7 @@ export const fetchRelatedArtists = async (artistName: string) => {
         artist: artistName,
         api_key: API_KEY,
         format: 'json',
-        limit: 20, //! Number of artists to fetch
+        limit: 40, //! Number of artists to fetch
       },
     });
 
@@ -31,9 +31,6 @@ export const fetchRelatedArtists = async (artistName: string) => {
       const j = Math.floor(Math.random() * (i + 1));
       [formattedArtists[i], formattedArtists[j]] = [formattedArtists[j], formattedArtists[i]];
     }
-
-    //! Debugging
-    console.log('Randomized related artists:', formattedArtists);
 
     return formattedArtists;
   } catch (error) {
