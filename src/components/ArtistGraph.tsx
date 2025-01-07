@@ -1,5 +1,7 @@
-import React, { useEffect, useRef } from "react";
-import * as d3 from "d3";
+// components/ArtistGraph.tsx
+import React, { useEffect, useRef, useState } from 'react';
+import * as d3 from 'd3';
+import ArtistCard from './ArtistCard';
 
 interface ArtistGraphProps {
   selectedArtist: string;
@@ -7,12 +9,16 @@ interface ArtistGraphProps {
   centerArtistPhoto: string | null;
 }
 
-export default function ArtistGraph({
+const ArtistGraph: React.FC<ArtistGraphProps> = ({
   selectedArtist,
   relatedArtists,
   centerArtistPhoto,
-}: ArtistGraphProps) {
+}) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const [selectedNode, setSelectedNode] = useState<{
+    name: string;
+    photoUrl: string;
+  } | null>(null);
 
   useEffect(() => {
     if (!selectedArtist || relatedArtists.length === 0) return;
@@ -24,43 +30,34 @@ export default function ArtistGraph({
 
     const svgSelection = d3.select<SVGSVGElement, unknown>(svgRef.current);
     svgSelection
-      .attr("viewBox", `0 0 ${width} ${height}`)
-      .style("background-color", "#f9f9f9");
+      .attr('viewBox', `0 0 ${width} ${height}`)
+      .style('background-color', '#f9f9f9');
 
-    svgSelection.selectAll("*").remove();
-    const svgGroup = svgSelection.append("g");
+    svgSelection.selectAll('*').remove();
+    const svgGroup = svgSelection.append('g');
 
-    const zoom = d3
-      .zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.5, 2])
-      .on("zoom", (event) => {
-        svgGroup.attr("transform", event.transform);
-      });
+    const zoom = d3.zoom<SVGSVGElement, unknown>().scaleExtent([0.5, 2]).on('zoom', (event) => {
+      svgGroup.attr('transform', event.transform);
+    });
 
-    svgSelection.call(zoom).style("cursor", "grab");
+    svgSelection.call(zoom).style('cursor', 'grab');
 
-    const centralNode = svgGroup
-      .append("g")
-      .attr("transform", `translate(${width / 2}, ${height / 2})`);
+    const centralNode = svgGroup.append('g').attr('transform', `translate(${width / 2}, ${height / 2})`);
+    centralNode.append('image')
+      .attr('href', centerArtistPhoto || 'https://via.placeholder.com/150')
+      .attr('x', -80)
+      .attr('y', -80)
+      .attr('width', 160)
+      .attr('height', 160)
+      .attr('clip-path', 'circle(80px at center)');
 
-    centralNode
-      .append("image")
-      .attr("href", centerArtistPhoto || "https://via.placeholder.com/150")
-      .attr("x", -80)
-      .attr("y", -80)
-      .attr("width", 160)
-      .attr("height", 160)
-      .attr("preserveAspectRatio", "xMidYMid slice")
-      .attr("clip-path", "circle(80px at center)");
-
-    centralNode
-      .append("text")
+    centralNode.append('text')
       .text(selectedArtist)
-      .attr("text-anchor", "middle")
-      .attr("y", 100)
-      .style("font-size", "16px")
-      .style("font-weight", "bold")
-      .style("fill", "#333");
+      .attr('text-anchor', 'middle')
+      .attr('y', 100)
+      .style('font-size', '16px')
+      .style('font-weight', 'bold')
+      .style('fill', '#333');
 
     const angleStep = (2 * Math.PI) / relatedArtists.length;
     const maxDistance = 1000;
@@ -74,38 +71,32 @@ export default function ArtistGraph({
       const angle = angleStep * index;
       const distance = maxDistance * (1 - adjustedSimilarityScore) * 1.5;
 
-      const nodeGroup = svgGroup
-        .append("g")
-        .attr("transform", `translate(${width / 2}, ${height / 2})`);
+      const nodeGroup = svgGroup.append('g')
+        .attr('transform', `translate(${width / 2}, ${height / 2})`)
+        .style('cursor', 'pointer')
+        .on('click', () => setSelectedNode({ name: artist.name, photoUrl: artist.photoUrl }));
 
-      nodeGroup
-        .append("image")
-        .attr("href", artist.photoUrl || "https://via.placeholder.com/150")
-        .attr("x", -40)
-        .attr("y", -40)
-        .attr("width", 80)
-        .attr("height", 80)
-        .attr("preserveAspectRatio", "xMidYMid slice")
-        .attr("clip-path", "circle(40px at center)");
+      nodeGroup.append('image')
+        .attr('href', artist.photoUrl || 'https://via.placeholder.com/150')
+        .attr('x', -40)
+        .attr('y', -40)
+        .attr('width', 80)
+        .attr('height', 80)
+        .attr('clip-path', 'circle(40px at center)');
 
-      nodeGroup
-        .append("text")
+      nodeGroup.append('text')
         .text(artist.name)
-        .attr("text-anchor", "middle")
-        .attr("y", 50)
-        .style("font-size", "12px")
-        .style("fill", "#333");
+        .attr('text-anchor', 'middle')
+        .attr('y', 50)
+        .style('font-size', '12px')
+        .style('fill', '#333');
 
-      nodeGroup
-        .transition()
-        .duration(500)
-        .ease(d3.easeLinear)
-        .attr(
-          "transform",
-          `translate(${width / 2 + Math.cos(angle) * distance}, ${
-            height / 2 + Math.sin(angle) * distance
-          })`
-        );
+      nodeGroup.transition().duration(500).ease(d3.easeLinear).attr(
+        'transform',
+        `translate(${width / 2 + Math.cos(angle) * distance}, ${
+          height / 2 + Math.sin(angle) * distance
+        })`
+      );
 
       let movementFactor = 2000;
       function moveRandomly() {
@@ -119,12 +110,12 @@ export default function ArtistGraph({
           .duration(60)
           .ease(d3.easeLinear)
           .attr(
-            "transform",
+            'transform',
             `translate(${width / 2 + Math.cos(angle) * distance + randomX}, ${
               height / 2 + Math.sin(angle) * distance + randomY
             })`
           )
-          .on("end", () => {
+          .on('end', () => {
             movementFactor *= 0.9;
             moveRandomly();
           });
@@ -134,5 +125,17 @@ export default function ArtistGraph({
     });
   }, [selectedArtist, relatedArtists, centerArtistPhoto]);
 
-  return <svg ref={svgRef}></svg>;
-}
+  return (
+    <>
+      <svg ref={svgRef}></svg>
+      {selectedNode && (
+        <ArtistCard
+          artist={selectedNode}
+          onClose={() => setSelectedNode(null)}
+        />
+      )}
+    </>
+  );
+};
+
+export default ArtistGraph;

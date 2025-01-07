@@ -23,13 +23,46 @@ export default function ArtistPage() {
       );
 
       if (cachedArtist) {
-        // If artist is found in the database, use that data
-        // Maybe eventually just save each artist once? idk the data redundancy is crazy!!!!
         setSelectedArtist(cachedArtist.name);
         setArtistPhoto(cachedArtist.photoUrl);
         setRelatedArtists(cachedArtist.relatedArtists);
+
+        // NEW: If there are fewer than 30 related artists, fetch and update the database
+        if (cachedArtist.relatedArtists.length < 30) {
+          const additionalArtistsFromLastFm = await fetchRelatedArtists(artistName);
+          const updatedRelatedArtists = await Promise.all(
+            additionalArtistsFromLastFm.map(async (artist: { name: string; similarityScore: number; photoUrl: string }) => {
+              try {
+                const details = await fetchArtistDetails(artist.name);
+                return {
+                  ...artist,
+                  photoUrl: details.imageURL || artist.photoUrl,
+                };
+              } catch (error) {
+                console.error(`Error fetching details for ${artist.name}:`, error);
+                return artist;
+              }
+            })
+          );
+
+          // Save the updated list of related artists back to the database
+          await fetch('/api/save-artist', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              name: cachedArtist.name,
+              photoUrl: cachedArtist.photoUrl,
+              relatedArtists: [...cachedArtist.relatedArtists, ...updatedRelatedArtists], // Combine existing and new
+            }),
+          });
+
+          setRelatedArtists([...cachedArtist.relatedArtists, ...updatedRelatedArtists]);
+        }
+
         setLoading(false);
-        return; 
+        return;
       }
 
       // Fetch central artist details from Spotify if not found in the database
