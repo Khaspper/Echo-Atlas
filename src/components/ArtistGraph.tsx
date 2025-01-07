@@ -22,17 +22,14 @@ export default function ArtistGraph({
 
     if (!svgRef.current) return;
 
-    // Set up the SVG canvas
     const svgSelection = d3.select<SVGSVGElement, unknown>(svgRef.current);
     svgSelection
       .attr("viewBox", `0 0 ${width} ${height}`)
       .style("background-color", "#f9f9f9");
 
-    // Clear existing graph
     svgSelection.selectAll("*").remove();
     const svgGroup = svgSelection.append("g");
 
-    // Set up zoom behavior
     const zoom = d3
       .zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.5, 2])
@@ -40,15 +37,12 @@ export default function ArtistGraph({
         svgGroup.attr("transform", event.transform);
       });
 
-    // Apply zoom behavior to the SVG element
     svgSelection.call(zoom).style("cursor", "grab");
 
-    // Add central node for the selected artist
     const centralNode = svgGroup
       .append("g")
       .attr("transform", `translate(${width / 2}, ${height / 2})`);
 
-    // Add central artist's photo
     centralNode
       .append("image")
       .attr("href", centerArtistPhoto || "https://via.placeholder.com/150")
@@ -59,7 +53,6 @@ export default function ArtistGraph({
       .attr("preserveAspectRatio", "xMidYMid slice")
       .attr("clip-path", "circle(80px at center)");
 
-    // Add central artist's name
     centralNode
       .append("text")
       .text(selectedArtist)
@@ -69,11 +62,6 @@ export default function ArtistGraph({
       .style("font-weight", "bold")
       .style("fill", "#333");
 
-    // Add nodes for related artists with animation
-    //! Joesphs idea: Change the size of the node based on the similarity score!!!!!!!!!!!
-    //! Joesphs idea: Dragable nodes goes back to the designated spot after release
-    //! Joesphs idea: If circle is clicked mini artist card is popped up
-    //! Joesphs idea: Get sample of their songs
     const angleStep = (2 * Math.PI) / relatedArtists.length;
     const maxDistance = 1000;
 
@@ -90,7 +78,6 @@ export default function ArtistGraph({
         .append("g")
         .attr("transform", `translate(${width / 2}, ${height / 2})`);
 
-      // Add artist's photo as the node
       nodeGroup
         .append("image")
         .attr("href", artist.photoUrl || "https://via.placeholder.com/150")
@@ -101,7 +88,6 @@ export default function ArtistGraph({
         .attr("preserveAspectRatio", "xMidYMid slice")
         .attr("clip-path", "circle(40px at center)");
 
-      // Add artist name below the photo
       nodeGroup
         .append("text")
         .text(artist.name)
@@ -110,17 +96,41 @@ export default function ArtistGraph({
         .style("font-size", "12px")
         .style("fill", "#333");
 
-      // Animate the node to its designated spot
       nodeGroup
         .transition()
         .duration(500)
-        .ease(d3.easeCubicOut)
+        .ease(d3.easeLinear)
         .attr(
           "transform",
           `translate(${width / 2 + Math.cos(angle) * distance}, ${
             height / 2 + Math.sin(angle) * distance
           })`
         );
+
+      let movementFactor = 2000;
+      function moveRandomly() {
+        if (movementFactor < 0.5) return;
+
+        const randomX = Math.random() * movementFactor - movementFactor / 2;
+        const randomY = Math.random() * movementFactor - movementFactor / 2;
+
+        nodeGroup
+          .transition()
+          .duration(60)
+          .ease(d3.easeLinear)
+          .attr(
+            "transform",
+            `translate(${width / 2 + Math.cos(angle) * distance + randomX}, ${
+              height / 2 + Math.sin(angle) * distance + randomY
+            })`
+          )
+          .on("end", () => {
+            movementFactor *= 0.9;
+            moveRandomly();
+          });
+      }
+
+      setTimeout(moveRandomly, 40);
     });
   }, [selectedArtist, relatedArtists, centerArtistPhoto]);
 
