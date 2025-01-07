@@ -1,23 +1,30 @@
-import mongoose, { Schema, Document, Types } from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 
-/**
- * Related artists will now be stored as ObjectId references instead of full objects.
- */
+export interface IRelatedArtist {
+    artistId: mongoose.Schema.Types.ObjectId; // Using ObjectId reference for related artists
+    similarityScore?: number;
+}
 
 export interface IArtist extends Document {
     name: string;
     photoUrl: string;
-    relatedArtists: Types.ObjectId[]; // Changed to references
+    relatedArtists: IRelatedArtist[];
     createdAt: Date;
 }
 
+const RelatedArtistSchema = new Schema<IRelatedArtist>({
+    artistId: { type: mongoose.Schema.Types.ObjectId, ref: 'Artist', required: true }, // Refers to another Artist document
+    similarityScore: { type: Number }
+});
+
 const ArtistSchema = new Schema<IArtist>({
-    name: { type: String, required: true, unique: true },
+    name: { type: String, required: true, unique: true },  // Prevent duplicate artist names
     photoUrl: { type: String, required: true },
-    relatedArtists: [{ type: Schema.Types.ObjectId, ref: 'Artist' }], // Storing references
+    relatedArtists: [RelatedArtistSchema],  // Only storing ObjectId references now
     createdAt: { type: Date, default: Date.now }
 });
 
+// Ensure the model is not recompiled when imported multiple times
 const Artist = mongoose.models.Artist || mongoose.model<IArtist>('Artist', ArtistSchema);
 
 export default Artist;

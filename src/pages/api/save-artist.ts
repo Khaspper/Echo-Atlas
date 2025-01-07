@@ -16,33 +16,47 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return res.status(400).json({ error: 'All fields are required and relatedArtists must be an array' });
         }
 
-        // Check if the artist already exists to avoid duplicates
+        // Check if the artist already exists
         let existingArtist = await Artist.findOne({ name });
-        if (!existingArtist) {
-            // If the artist does not exist, create a new one
-            existingArtist = new Artist({ name, photoUrl, relatedArtists: [] });
-            await existingArtist.save();
+        if (existingArtist) {
+            return res.status(409).json({ error: 'Artist already exists' });
         }
 
-        // Process related artists and reference them by ObjectId
-        const relatedArtistIds = [];
+        // Prepare relatedArtists array with ObjectId references
+        const relatedArtistsRefs = [];
+
         for (const artist of relatedArtists) {
-            let existingRelatedArtist = await Artist.findOne({ name: artist.name });
-            if (!existingRelatedArtist) {
-                existingRelatedArtist = new Artist({
+            if (!artist.name || !artist.photoUrl) {
+                return res.status(400).json({ error: 'Each related artist must have a name and photo URL' });
+            }
+
+            let relatedArtist = await Artist.findOne({ name: artist.name });
+
+            // If related artist doesn't exist, create it
+            if (!relatedArtist) {
+                relatedArtist = await Artist.create({
                     name: artist.name,
                     photoUrl: artist.photoUrl,
+                    relatedArtists: []
                 });
-                await existingRelatedArtist.save();
             }
-            relatedArtistIds.push(existingRelatedArtist._id);
+
+            relatedArtistsRefs.push({
+                artistId: relatedArtist._id,
+                similarityScore: artist.similarityScore || null
+            });
         }
 
-        // Update the main artist with the related artist references
-        existingArtist.relatedArtists = relatedArtistIds;
-        await existingArtist.save();
+        // Create the new artist with references
+        const newArtist = new Artist({
+            name,
+            photoUrl,
+            relatedArtists: relatedArtistsRefs
+        });
 
-        res.status(201).json({ message: 'Artist saved successfully with references!', artist: existingArtist });
+        await newArtist.save();
+
+        res.status(201).json({ message: 'Artist saved successfully!', artist: newArtist });
     } catch (error) {
         console.error('Error saving artist:', error);
         res.status(500).json({ error: 'Failed to save artist data.' });
