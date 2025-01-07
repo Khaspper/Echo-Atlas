@@ -15,7 +15,7 @@ export default function ArtistPage() {
   const handleArtistSearch = async (artistName: string) => {
     setLoading(true);
     try {
-      // Check if artist data already exists in the database
+      //? GPT COMMENT: Fetching the entire artist collection from the database
       const response = await fetch('/api/get-artists');
       const data = await response.json();
       const cachedArtist = data.find(
@@ -23,40 +23,72 @@ export default function ArtistPage() {
       );
 
       if (cachedArtist) {
-        // If artist is found in the database, use that data
-        // Maybe eventually just save each artist once? idk the data redundancy is crazy!!!!
+        //? GPT COMMENT: Using cached artist data if available
         setSelectedArtist(cachedArtist.name);
         setArtistPhoto(cachedArtist.photoUrl);
         setRelatedArtists(cachedArtist.relatedArtists);
         setLoading(false);
-        return; 
+
+        //? GPT COMMENT: Check if the related artist array is empty and repopulate if necessary
+        if (cachedArtist.relatedArtists.length === 0) {
+          const artistsFromLastFm = await fetchRelatedArtists(artistName);
+          const updatedRelatedArtists = await Promise.all(
+            artistsFromLastFm.map(async (artist: { name: string; similarityScore: number; photoUrl: string }) => {
+              try {
+                const details = await fetchArtistDetails(artist.name);
+                return {
+                  ...artist,
+                  photoUrl: details.imageURL || artist.photoUrl,
+                };
+              } catch (error) {
+                console.error(`Error fetching details for ${artist.name}:`, error);
+                return artist;
+              }
+            })
+          );
+
+          //? GPT COMMENT: Save updated related artists to the database
+          await fetch('/api/save-artist', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              name: cachedArtist.name,
+              photoUrl: cachedArtist.photoUrl,
+              relatedArtists: updatedRelatedArtists,
+            }),
+          });
+
+          setRelatedArtists(updatedRelatedArtists);
+        }
+        return;
       }
 
-      // Fetch central artist details from Spotify if not found in the database
+      //? GPT COMMENT: Fetching artist details from Spotify if not found in the database
       const artistDetails = await fetchArtistDetails(artistName);
       setSelectedArtist(artistDetails.name);
-      setArtistPhoto(artistDetails.imageURL || 'https://via.placeholder.com/150'); 
+      setArtistPhoto(artistDetails.imageURL || 'https://via.placeholder.com/150');
 
-      // Fetch related artists from Last.fm
+      //? GPT COMMENT: Fetching related artists from Last.fm
       const artistsFromLastFm = await fetchRelatedArtists(artistName);
 
-      // Fetch photos for each related artist from Spotify
       const updatedRelatedArtists = await Promise.all(
         artistsFromLastFm.map(async (artist: { name: string; similarityScore: number; photoUrl: string }) => {
           try {
             const details = await fetchArtistDetails(artist.name);
             return {
               ...artist,
-              photoUrl: details.imageURL || artist.photoUrl, 
+              photoUrl: details.imageURL || artist.photoUrl,
             };
           } catch (error) {
-            console.error('Error fetching details for ${artist.name}:, error');
+            console.error(`Error fetching details for ${artist.name}:`, error);
             return artist;
           }
         })
       );
 
-      // Save the newly fetched artist and related artists data to the database
+      //? GPT COMMENT: Save newly fetched artist and related artists to the database
       await fetch('/api/save-artist', {
         method: 'POST',
         headers: {
@@ -80,7 +112,7 @@ export default function ArtistPage() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
-      {/* Header with Search Bar */}
+      {/*? GPT COMMENT: Header with the search bar for artist input */}
       <div className="p-4 bg-white shadow-md">
         <div className="flex flex-col items-center">
           {selectedArtist ? (
@@ -97,7 +129,7 @@ export default function ArtistPage() {
         </div>
       </div>
 
-      {/* Main Content Area */}
+      {/*? GPT COMMENT: Main content area where artist graph will be displayed */}
       <div className="flex-grow">
         {loading ? (
           <div className="flex justify-center items-center h-full">
@@ -117,4 +149,4 @@ export default function ArtistPage() {
       </div>
     </div>
   );
-} 
+}
