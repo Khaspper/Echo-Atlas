@@ -24,6 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         let existingArtist = await Artist.findOne({ name });
 
         // If the artist exists, update their related artists and top tracks if needed
+        //! FIX THIS MAKE SURE IF THE ARTISTS EXISTS YOU UPDATE THIER RELATED ARTISTS
         if (existingArtist) {
             return res.status(409).json({ error: 'Artist already exists. Related artists and tracks updated if missing.' });
         }
