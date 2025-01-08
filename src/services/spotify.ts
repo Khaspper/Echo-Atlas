@@ -11,9 +11,6 @@ const SPOTIFY_API_BASE_URL = 'https://api.spotify.com/v1';
 let accessToken: string | null = null;
 let tokenExpiry: number | null = null;
 
-/**
- * Fetch a new access token from Spotify API.
- */
 const fetchAccessToken = async (): Promise<void> => {
   const authString = Buffer.from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`).toString('base64');
 
@@ -28,9 +25,6 @@ const fetchAccessToken = async (): Promise<void> => {
   tokenExpiry = Date.now() + response.data.expires_in * 1000; // Calculate token expiry time
 };
 
-/**
- * Ensure that we have a valid token before making API requests.
- */
 const ensureToken = async (): Promise<void> => {
   if (!accessToken || (tokenExpiry && Date.now() > tokenExpiry)) {
     await fetchAccessToken();
@@ -38,7 +32,7 @@ const ensureToken = async (): Promise<void> => {
 };
 
 /**
- * Search for an artist by name and fetch details including their image.
+ * Search for an artist by name, fetch details including their image and top 3 tracks.
  * @param artistName Name of the artist to search for
  */
 export const fetchArtistDetails = async (artistName: string) => {
@@ -61,41 +55,30 @@ export const fetchArtistDetails = async (artistName: string) => {
     }
 
     const artist = response.data.artists.items[0];
-    return {
-      id: artist.id,
-      name: artist.name,
-      imageURL: artist.images[0]?.url || '', // Default to empty if no image
-    };
-  } catch (error: any) {
-    console.error(`Failed to fetch artist details: ${error.message}`);
-    throw error;
-  }
-};
 
-/**
- * Fetch detailed information about an artist by their Spotify ID.
- * @param artistId Spotify ID of the artist
- */
-export const fetchArtistById = async (artistId: string) => {
-  await ensureToken();
-
-  try {
-    const response = await axios.get(`${SPOTIFY_API_BASE_URL}/artists/${artistId}`, {
+    // Fetch top tracks for the artist and only return uri
+    const topTracksResponse = await axios.get(`${SPOTIFY_API_BASE_URL}/artists/${artist.id}/top-tracks`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
+      params: {
+        market: 'US',
+      },
     });
 
-    const artist = response.data;
+    const topTracks = topTracksResponse.data.tracks.slice(0, 3).map((track: any) => ({
+      name: track.name,
+      uri: track.uri, // Only saving the URI instead of the full object
+    }));
+
     return {
       id: artist.id,
       name: artist.name,
       imageURL: artist.images[0]?.url || '',
-      genres: artist.genres,
-      followers: artist.followers.total,
+      topTracks, // Now returning only name and URI
     };
   } catch (error: any) {
-    console.error(`Failed to fetch artist by ID: ${error.message}`);
+    console.error(`Failed to fetch artist details: ${error.message}`);
     throw error;
   }
 };

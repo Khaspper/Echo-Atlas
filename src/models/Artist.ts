@@ -5,22 +5,34 @@ export interface IRelatedArtist {
     similarityScore?: number;
 }
 
+export interface ITopTrack {
+    name: string;
+    uri: string;
+}
+
 export interface IArtist extends Document {
     name: string;
     photoUrl: string;
     relatedArtists: IRelatedArtist[];
+    topTracks: ITopTrack[];
     createdAt: Date;
 }
 
 const RelatedArtistSchema = new Schema<IRelatedArtist>({
-    artistId: { type: mongoose.Schema.Types.ObjectId, ref: 'Artist', required: true }, // Refers to another Artist document
+    artistId: { type: mongoose.Schema.Types.ObjectId, ref: 'Artist', required: true },
     similarityScore: { type: Number }
 });
 
+const TopTrackSchema = new Schema<ITopTrack>({
+    name: { type: String, required: true },
+    uri: { type: String, required: true }
+});
+
 const ArtistSchema = new Schema<IArtist>({
-    name: { type: String, required: true, unique: true },  // Prevent duplicate artist names
+    name: { type: String, required: true, unique: true },
     photoUrl: { type: String, required: true },
-    relatedArtists: [RelatedArtistSchema],  // Only storing ObjectId references now
+    relatedArtists: [RelatedArtistSchema],
+    topTracks: [TopTrackSchema],
     createdAt: { type: Date, default: Date.now }
 });
 

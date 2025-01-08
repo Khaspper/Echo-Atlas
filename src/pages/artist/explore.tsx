@@ -4,41 +4,49 @@ import ArtistGraph from '../../components/ArtistGraph';
 import { fetchRelatedArtists } from '../../services/lastfm';
 import { fetchArtistDetails } from '../../services/spotify';
 
+// Main component for exploring artists
 export default function ArtistPage() {
+  // State variables to store artist data and loading status
   const [selectedArtist, setSelectedArtist] = useState<string | null>(null);
   const [artistPhoto, setArtistPhoto] = useState<string | null>(null);
   const [relatedArtists, setRelatedArtists] = useState<
     { name: string; similarityScore: number; photoUrl: string }[]
   >([]);
+  const [topTracks, setTopTracks] = useState<{ name: string; uri: string }[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Function to handle searching for an artist
   const handleArtistSearch = async (artistName: string) => {
     setLoading(true);
     try {
-      //? GPT COMMENT: Fetching the entire artist collection from the database
+      // Fetching artist data from the database
       const response = await fetch('/api/get-artists');
       const data = await response.json();
       const cachedArtist = data.find(
         (artist: { name: string }) => artist.name.toLowerCase() === artistName.toLowerCase()
       );
 
+      // If the artist is found in the database, load the data from the cache
       if (cachedArtist) {
-        //? GPT COMMENT: Using cached artist data if available
+        console.log("cachedArtist.name", cachedArtist.name)
         setSelectedArtist(cachedArtist.name);
         setArtistPhoto(cachedArtist.photoUrl);
         setRelatedArtists(cachedArtist.relatedArtists);
+        setTopTracks(cachedArtist.topTracks);
         setLoading(false);
 
-        //? GPT COMMENT: Check if the related artist array is empty and repopulate if necessary
+        // If related artists are not available, fetch them from the API
         if (cachedArtist.relatedArtists.length === 0) {
           const artistsFromLastFm = await fetchRelatedArtists(artistName);
           const updatedRelatedArtists = await Promise.all(
             artistsFromLastFm.map(async (artist: { name: string; similarityScore: number; photoUrl: string }) => {
               try {
                 const details = await fetchArtistDetails(artist.name);
+                const relatedTopTracks = details.topTracks;
                 return {
                   ...artist,
                   photoUrl: details.imageURL || artist.photoUrl,
+                  topTracks: relatedTopTracks,
                 };
               } catch (error) {
                 console.error(`Error fetching details for ${artist.name}:`, error);
@@ -47,7 +55,7 @@ export default function ArtistPage() {
             })
           );
 
-          //? GPT COMMENT: Save updated related artists to the database
+          // Save the updated related artists and top tracks in the database
           await fetch('/api/save-artist', {
             method: 'POST',
             headers: {
@@ -57,29 +65,33 @@ export default function ArtistPage() {
               name: cachedArtist.name,
               photoUrl: cachedArtist.photoUrl,
               relatedArtists: updatedRelatedArtists,
+              topTracks,
             }),
           });
-
           setRelatedArtists(updatedRelatedArtists);
         }
         return;
       }
 
-      //? GPT COMMENT: Fetching artist details from Spotify if not found in the database
+      // Fetching artist data from external APIs
       const artistDetails = await fetchArtistDetails(artistName);
-      setSelectedArtist(artistDetails.name);
+      artistName = artistDetails.name
+      setSelectedArtist(artistName);
       setArtistPhoto(artistDetails.imageURL || 'https://via.placeholder.com/150');
+      const fetchedTopTracks = artistDetails.topTracks;
+      setTopTracks(fetchedTopTracks);
 
-      //? GPT COMMENT: Fetching related artists from Last.fm
+      // Fetch related artists data from Last.fm
       const artistsFromLastFm = await fetchRelatedArtists(artistName);
-
       const updatedRelatedArtists = await Promise.all(
         artistsFromLastFm.map(async (artist: { name: string; similarityScore: number; photoUrl: string }) => {
           try {
             const details = await fetchArtistDetails(artist.name);
+            const relatedTopTracks = details.topTracks;
             return {
               ...artist,
               photoUrl: details.imageURL || artist.photoUrl,
+              topTracks: relatedTopTracks,
             };
           } catch (error) {
             console.error(`Error fetching details for ${artist.name}:`, error);
@@ -88,7 +100,7 @@ export default function ArtistPage() {
         })
       );
 
-      //? GPT COMMENT: Save newly fetched artist and related artists to the database
+      // Save the new artist data and related artists in the database
       await fetch('/api/save-artist', {
         method: 'POST',
         headers: {
@@ -98,6 +110,7 @@ export default function ArtistPage() {
           name: artistDetails.name,
           photoUrl: artistDetails.imageURL,
           relatedArtists: updatedRelatedArtists,
+          topTracks: fetchedTopTracks,
         }),
       });
 
@@ -112,7 +125,7 @@ export default function ArtistPage() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
-      {/*? GPT COMMENT: Header with the search bar for artist input */}
+      {/* Header section with search bar */}
       <div className="p-4 bg-white shadow-md">
         <div className="flex flex-col items-center">
           {selectedArtist ? (
@@ -129,7 +142,7 @@ export default function ArtistPage() {
         </div>
       </div>
 
-      {/*? GPT COMMENT: Main content area where artist graph will be displayed */}
+      {/* Main content area where the graph is displayed */}
       <div className="flex-grow">
         {loading ? (
           <div className="flex justify-center items-center h-full">
