@@ -66,7 +66,7 @@ export const fetchArtistDetails = async (artistName: string) => {
       },
     });
 
-    const topTracks = topTracksResponse.data.tracks.slice(0, 3).map((track: any) => ({
+    const topTracks = topTracksResponse.data.tracks.slice(0, 5).map((track: any) => ({
       name: track.name,
       uri: track.uri, // Only saving the URI instead of the full object
     }));

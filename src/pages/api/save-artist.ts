@@ -14,7 +14,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // Destructuring the incoming request body for artist data
         const { name, photoUrl, relatedArtists, topTracks } = req.body;
-        console.log(`save-artist:`, relatedArtists);
 
         // Basic validation to ensure required fields are provided
         if (!name || !photoUrl || !Array.isArray(relatedArtists) || !Array.isArray(topTracks)) {

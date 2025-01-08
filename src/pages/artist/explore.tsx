@@ -28,7 +28,6 @@ export default function ArtistPage() {
 
       // If the artist is found in the database, load the data from the cache
       if (cachedArtist) {
-        console.log("cachedArtist.name", cachedArtist.name)
         setSelectedArtist(cachedArtist.name);
         setArtistPhoto(cachedArtist.photoUrl);
         setRelatedArtists(cachedArtist.relatedArtists);

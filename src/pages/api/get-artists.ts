@@ -12,6 +12,10 @@ interface PopulatedArtist {
         };
         similarityScore?: number;
     }[];
+    topTracks: {
+        name: string;
+        uri: string;
+    }[];
     createdAt: Date;
 }
 
@@ -19,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
         await connectToDatabase();
 
-        // Fetch all artists with populated relatedArtists
+        // Fetch all artists with populated relatedArtists and topTracks
         const artists = await Artist.find({})
             .populate({
                 path: 'relatedArtists.artistId',
@@ -36,6 +40,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 name: related.artistId?.name || 'Unknown',
                 photoUrl: related.artistId?.photoUrl || 'https://via.placeholder.com/150',
                 similarityScore: related.similarityScore
+            })),
+            topTracks: artist.topTracks.map((track: any) => ({
+                name: track.name,
+                uri: track.uri
             }))
         })) as PopulatedArtist[];
 
