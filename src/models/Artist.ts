@@ -15,12 +15,13 @@ export interface IArtist extends Document {
     photoUrl: string;
     relatedArtists: IRelatedArtist[];
     topTracks: ITopTrack[];
+    colorPalette?: number[][];
     createdAt: Date;
 }
 
 const RelatedArtistSchema = new Schema<IRelatedArtist>({
     artistId: { type: mongoose.Schema.Types.ObjectId, ref: 'Artist', required: true },
-    similarityScore: { type: Number }
+    similarityScore: { type: Number },
 });
 
 const TopTrackSchema = new Schema<ITopTrack>({
@@ -33,6 +34,7 @@ const ArtistSchema = new Schema<IArtist>({
     photoUrl: { type: String, required: true },
     relatedArtists: [RelatedArtistSchema],
     topTracks: [TopTrackSchema],
+    colorPalette: { type: [[Number]], required: true },
     createdAt: { type: Date, default: Date.now }
 });
 

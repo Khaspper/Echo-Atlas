@@ -13,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         await connectToDatabase();
 
         // Destructuring the incoming request body for artist data
-        const { name, photoUrl, relatedArtists, topTracks } = req.body;
+        const { name, photoUrl, relatedArtists, topTracks, colorPalette } = req.body;
 
         // Basic validation to ensure required fields are provided
         if (!name || !photoUrl || !Array.isArray(relatedArtists) || !Array.isArray(topTracks)) {
@@ -27,21 +27,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (existingArtist) {
             if (existingArtist.relatedArtists.length === 0) {
                 const relatedArtistsRefs = await Promise.all(
-                    relatedArtists.map(async (artist: { name: string; photoUrl: string; similarityScore?: number; topTracks: { name: string; uri: string }[] }) => {
+                    relatedArtists.map(async (artist: { name: string; photoUrl: string; similarityScore?: number; topTracks: { name: string; uri: string }[], colorPalette?: number[][] }) => { 
                         let relatedArtist = await Artist.findOne({ name: artist.name });
                         if (!relatedArtist) {
                             relatedArtist = await Artist.create({
                                 name: artist.name,
                                 photoUrl: artist.photoUrl,
                                 relatedArtists: [],
-                                topTracks: artist.topTracks
+                                topTracks: artist.topTracks,
+                                colorPalette: artist.colorPalette || [] 
                             });
                         }
-                        return { artistId: relatedArtist._id, similarityScore: artist.similarityScore || null };
+                        return { artistId: relatedArtist._id, similarityScore: artist.similarityScore || null}; 
                     })
                 );
 
                 existingArtist.relatedArtists = relatedArtistsRefs;
+                existingArtist.colorPalette = colorPalette; 
                 await existingArtist.save();
                 return res.status(200).json({ message: 'Related artists updated successfully!', artist: existingArtist });
             }
@@ -50,21 +52,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // If the artist is new, create and save them along with related artists
         const relatedArtistsRefs = await Promise.all(
-            relatedArtists.map(async (artist: { name: string; photoUrl: string; similarityScore?: number; topTracks: { name: string; uri: string }[] }) => {
+            relatedArtists.map(async (artist: { name: string; photoUrl: string; similarityScore?: number; topTracks: { name: string; uri: string }[], colorPalette?: number[][] }) => { 
                 let relatedArtist = await Artist.findOne({ name: artist.name });
                 if (!relatedArtist) {
                     relatedArtist = await Artist.create({
                         name: artist.name,
                         photoUrl: artist.photoUrl,
                         relatedArtists: [],
-                        topTracks: artist.topTracks
+                        topTracks: artist.topTracks,
+                        colorPalette: artist.colorPalette || [] 
                     });
                 }
-                return { artistId: relatedArtist._id, similarityScore: artist.similarityScore || null };
+                return { artistId: relatedArtist._id, similarityScore: artist.similarityScore || null }; 
             })
         );
 
-        // Create and save the new artist document with top tracks
+        // Create and save the new artist document with top tracks and color palette
         const newArtist = new Artist({
             name,
             photoUrl,
@@ -79,7 +82,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         res.status(201).json({ message: 'Artist saved successfully!', artist: newArtist });
 
     } catch (error) {
-        // Error handling for database or server issues
         console.error('Error saving artist:', error);
         res.status(500).json({ error: 'Failed to save artist data.' });
     }

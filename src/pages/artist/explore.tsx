@@ -3,6 +3,7 @@ import SearchBar from '../../components/SearchBar';
 import ArtistGraph from '../../components/ArtistGraph';
 import { fetchRelatedArtists } from '../../services/lastfm';
 import { fetchArtistDetails } from '../../services/spotify';
+import getColorPalette from '../../utils/getColorPalette';
 
 // Main component for exploring artists
 export default function ArtistPage() {
@@ -10,10 +11,21 @@ export default function ArtistPage() {
   const [selectedArtist, setSelectedArtist] = useState<string | null>(null);
   const [artistPhoto, setArtistPhoto] = useState<string | null>(null);
   const [relatedArtists, setRelatedArtists] = useState<
-    { name: string; similarityScore: number; photoUrl: string }[]
+    { name: string; similarityScore: number; photoUrl: string; colorPalette?: number[][] }[]
   >([]);
   const [topTracks, setTopTracks] = useState<{ name: string; uri: string }[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Generate a color palette from an image URL
+  const generateColorPalette = async (photoUrl: string): Promise<number[][]> => {
+    try {
+      const palette = await getColorPalette(photoUrl, 5);
+      return palette;
+    } catch (error) {
+      console.error('Error generating color palette:', error);
+      return [];
+    }
+  };
 
   // Function to handle searching for an artist
   const handleArtistSearch = async (artistName: string) => {
@@ -42,10 +54,12 @@ export default function ArtistPage() {
               try {
                 const details = await fetchArtistDetails(artist.name);
                 const relatedTopTracks = details.topTracks;
+                const colorPalette = await generateColorPalette(details.imageURL || artist.photoUrl); // Color extraction for related artists
                 return {
                   ...artist,
                   photoUrl: details.imageURL || artist.photoUrl,
                   topTracks: relatedTopTracks,
+                  colorPalette
                 };
               } catch (error) {
                 console.error(`Error fetching details for ${artist.name}:`, error);
@@ -74,6 +88,8 @@ export default function ArtistPage() {
 
       // Fetching artist data from external APIs
       const artistDetails = await fetchArtistDetails(artistName);
+      const artistColorPalette = await generateColorPalette(artistDetails.imageURL); // Color extraction for the searched artist
+
       artistName = artistDetails.name
       setSelectedArtist(artistName);
       setArtistPhoto(artistDetails.imageURL || 'https://via.placeholder.com/150');
@@ -87,10 +103,12 @@ export default function ArtistPage() {
           try {
             const details = await fetchArtistDetails(artist.name);
             const relatedTopTracks = details.topTracks;
+            const colorPalette = await generateColorPalette(details.imageURL || artist.photoUrl); // Color extraction for related artists
             return {
               ...artist,
               photoUrl: details.imageURL || artist.photoUrl,
               topTracks: relatedTopTracks,
+              colorPalette
             };
           } catch (error) {
             console.error(`Error fetching details for ${artist.name}:`, error);
@@ -110,6 +128,7 @@ export default function ArtistPage() {
           photoUrl: artistDetails.imageURL,
           relatedArtists: updatedRelatedArtists,
           topTracks: fetchedTopTracks,
+          colorPalette: artistColorPalette,
         }),
       });
 

@@ -11,11 +11,14 @@ interface PopulatedArtist {
             photoUrl: string;
         };
         similarityScore?: number;
+        //! I dont think we need this
+        // colorPalette?: number[][];
     }[];
     topTracks: {
         name: string;
         uri: string;
     }[];
+    colorPalette?: number[][];
     createdAt: Date;
 }
 
@@ -36,10 +39,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             name: artist.name,
             photoUrl: artist.photoUrl,
             createdAt: artist.createdAt,
+            colorPalette: artist.colorPalette || [],
             relatedArtists: artist.relatedArtists.map((related: any) => ({
                 name: related.artistId?.name || 'Unknown',
                 photoUrl: related.artistId?.photoUrl || 'https://via.placeholder.com/150',
-                similarityScore: related.similarityScore
+                similarityScore: related.similarityScore,
+                colorPalette: related.colorPalette || []
             })),
             topTracks: artist.topTracks.map((track: any) => ({
                 name: track.name,
