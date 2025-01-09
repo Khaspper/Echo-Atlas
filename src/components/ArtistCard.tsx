@@ -25,9 +25,8 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClose }) => {
     const generateGradient = async () => {
       try {
         const colors = await getColorPalette(artist.photoUrl);
-        // const [color1, color2] = colors.sort(() => 0.5 - Math.random()).slice(0, 2);
         const [color1, color2] = colors.slice(0, 2);
-        setGradientColors(`linear-gradient(to bottom right, rgb(${color1.join(',')}), rgb(${color2.join(',')}))`);
+        setGradientColors(`linear-gradient(to bottom right, rgba(${color1.join(',')},0.9), rgba(${color2.join(',')},0.9))`); //? GPT COMMENT: Added transparency for better text readability.
       } catch (error) {
         console.error('Error generating gradient:', error);
       }
@@ -45,14 +44,14 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-lg z-50"
+      className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-lg z-50 transition-all duration-300"
       onClick={handleOutsideClick}
     >
-      <div className="rounded-lg shadow-lg p-6 relative max-w-sm"
-           style={{ background: gradientColors }} //? GPT COMMENT: Gradient applied directly to the card instead of the background
+      <div className="rounded-xl shadow-2xl p-6 relative max-w-sm text-white"
+           style={{ background: gradientColors }} //? GPT COMMENT: Applied subtle border radius, enhanced shadow, and adjusted text color for contrast.
       >
         <button
-          className="absolute top-2 right-2 text-xl font-bold"
+          className="absolute top-2 right-2 text-xl font-bold hover:text-red-500 transition-all"
           onClick={onClose}
         >
           ✖
