@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import getColorPalette from '../utils/getColorPalette'; //? GPT COMMENT: Importing the getColorPalette utility to fetch colors from the artist image
 
 interface ArtistCardProps {
   artist: { name: string; photoUrl: string; topTracks?: { name: string; uri: string }[] };
@@ -7,6 +8,7 @@ interface ArtistCardProps {
 
 const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClose }) => {
   const [specifiedArtist, setSpecifiedArtist] = useState<ArtistCardProps["artist"] | null>(null);
+  const [gradientColors, setGradientColors] = useState<string>('');
 
   useEffect(() => {
     const fetchArtist = async () => {
@@ -20,20 +22,35 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClose }) => {
       }
     };
 
+    const generateGradient = async () => {
+      try {
+        const colors = await getColorPalette(artist.photoUrl);
+        // const [color1, color2] = colors.sort(() => 0.5 - Math.random()).slice(0, 2);
+        const [color1, color2] = colors.slice(0, 2);
+        setGradientColors(`linear-gradient(to bottom right, rgb(${color1.join(',')}), rgb(${color2.join(',')}))`);
+      } catch (error) {
+        console.error('Error generating gradient:', error);
+      }
+    };
+
     fetchArtist();
-  }, [artist.name]);
+    generateGradient();
+  }, [artist.name, artist.photoUrl]);
 
   const handleOutsideClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (event.target === event.currentTarget) {
       onClose();
     }
   };
+
   return (
     <div
       className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-lg z-50"
       onClick={handleOutsideClick}
     >
-      <div className="bg-white rounded-lg shadow-lg p-6 relative max-w-sm">
+      <div className="rounded-lg shadow-lg p-6 relative max-w-sm"
+           style={{ background: gradientColors }} //? GPT COMMENT: Gradient applied directly to the card instead of the background
+      >
         <button
           className="absolute top-2 right-2 text-xl font-bold"
           onClick={onClose}
