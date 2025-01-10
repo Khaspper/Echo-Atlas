@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import getColorPalette from '../utils/getColorPalette';
 
 interface ArtistCardProps {
-  artist: { name: string; photoUrl: string; topTracks?: { name: string; uri: string }[] };
+  artist: { name: string; photoUrl: string; topTracks?: { name: string; uri: string }[]; colorPalette?: number[][] };
   onClose: () => void;
 }
 
 const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClose }) => {
   const [specifiedArtist, setSpecifiedArtist] = useState<ArtistCardProps["artist"] | null>(null);
   const [gradientColors, setGradientColors] = useState<string>('');
+  const [borderGradient, setBorderGradient] = useState<string>('');
 
   useEffect(() => {
     const fetchArtist = async () => {
@@ -17,23 +17,18 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClose }) => {
         const data = await response.json();
         const foundArtist = data.find((a: { name: string }) => a.name === artist.name);
         setSpecifiedArtist(foundArtist);
+
+        const [color1, color2] = foundArtist.colorPalette.slice(0, 2);
+        const [color3, color4] = foundArtist.colorPalette.slice(3, 5);
+        setGradientColors(`linear-gradient(to bottom right, rgba(${color1.join(',')},0.9), rgba(${color2.join(',')},0.9))`);
+        setBorderGradient(`from-[rgba(${color3.join(',')},0.9)] to-[rgba(${color4.join(',')},0.9)]`);
+
       } catch (error) {
         console.error('Error fetching artist:', error);
       }
     };
 
-    const generateGradient = async () => {
-      try {
-        const colors = await getColorPalette(artist.photoUrl);
-        const [color1, color2] = colors.slice(0, 2);
-        setGradientColors(`linear-gradient(to bottom right, rgba(${color1.join(',')},0.9), rgba(${color2.join(',')},0.9))`);
-      } catch (error) {
-        console.error('Error generating gradient:', error);
-      }
-    };
-
     fetchArtist();
-    generateGradient();
   }, [artist.name, artist.photoUrl]);
 
   const handleOutsideClick = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -50,30 +45,40 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClose }) => {
       <div className="rounded-xl shadow-2xl p-6 relative max-w-sm text-white"
            style={{ background: gradientColors }}
       >
+        {/* //? GPT COMMENT: Close button with hover effect for better UX */}
         <button
           className="absolute top-2 right-4 text-2xl font-bold hover:text-red-500 transition-all"
           onClick={onClose}
         >
           &times;
         </button>
-        <img
-          src={specifiedArtist?.photoUrl || artist.photoUrl}
-          alt={specifiedArtist?.name || artist.name}
-          className="w-32 h-32 rounded-full mx-auto"
-        />
-        <h2 className="text-2xl font-bold text-center mt-4">{specifiedArtist?.name || artist.name}</h2>
+
+        {/* //? GPT COMMENT: Profile Image with Gradient Border for Visual Appeal */}
+        <div className={`relative w-36 h-36 mx-auto rounded-full p-1 bg-gradient-to-r ${borderGradient} shadow-lg`}>
+          <img
+            src={specifiedArtist?.photoUrl || artist.photoUrl}
+            alt={specifiedArtist?.name || artist.name}
+            className="w-full h-full object-cover rounded-full"
+          />
+        </div>
+
+        {/* //? GPT COMMENT: Artist Name Centered and More Prominent */}
+        <h2 className="text-3xl font-bold text-center mt-4 tracking-wide">{specifiedArtist?.name || artist.name}</h2>
+
+        {/* //? GPT COMMENT: Displaying Top Tracks Section with Cleaner Layout */}
         {specifiedArtist?.topTracks && specifiedArtist.topTracks.length > 0 ? (
-          <div className="mt-4">
-            <h3 className="text-lg font-semibold">Top Tracks:</h3>
-            <ul className="list-disc list-inside">
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold text-center mb-2">Top Tracks:</h3>
+            <ul className="space-y-4">
               {specifiedArtist.topTracks.map((track, index) => (
-                <li key={index}>
+                <li key={index} className="bg-gray-800 bg-opacity-70 p-2 rounded-lg shadow-lg">
                   <iframe
                     src={`https://open.spotify.com/embed/track/${track.uri.split(':').pop()}`}
                     width="100%"
                     height="80"
                     frameBorder="0"
                     allow="encrypted-media"
+                    className="rounded-lg"
                   ></iframe>
                 </li>
               ))}
