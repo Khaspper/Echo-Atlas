@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 const Navbar = () => {
   const router = useRouter();
   return (
-    <nav className=" p-4 flex justify-between">
+    <nav className=" p-4 flex justify-between" style={{ backgroundColor: '#18181b' }}>
       {/* Todo: I have to fix the links for these */}
       {/* Todo: I also have to add the boxes */}
       {/* For the 3D Buttons watch this video */}

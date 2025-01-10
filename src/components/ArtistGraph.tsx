@@ -31,7 +31,7 @@ const ArtistGraph: React.FC<ArtistGraphProps> = ({
     const svgSelection = d3.select<SVGSVGElement, unknown>(svgRef.current);
     svgSelection
       .attr('viewBox', `0 0 ${width} ${height}`)
-      .style('background-color', '#f9f9f9');
+      .style('background-color', '#2c2c2c'); //? GPT COMMENT: Changed canvas background to dark gray
 
     svgSelection.selectAll('*').remove();
     const svgGroup = svgSelection.append('g');
@@ -42,7 +42,11 @@ const ArtistGraph: React.FC<ArtistGraphProps> = ({
 
     svgSelection.call(zoom).style('cursor', 'grab');
 
-    const centralNode = svgGroup.append('g').attr('transform', `translate(${width / 2}, ${height / 2})`);
+    const centralNode = svgGroup.append('g')
+      .attr('transform', `translate(${width / 2}, ${height / 2})`)
+      .style('cursor', 'pointer') //? GPT COMMENT: Made central node clickable
+      .on('click', () => setSelectedNode({ name: selectedArtist, photoUrl: centerArtistPhoto || 'https://via.placeholder.com/150' }));
+
     centralNode.append('image')
       .attr('href', centerArtistPhoto || 'https://via.placeholder.com/150')
       .attr('x', -80)
@@ -57,7 +61,7 @@ const ArtistGraph: React.FC<ArtistGraphProps> = ({
       .attr('y', 100)
       .style('font-size', '16px')
       .style('font-weight', 'bold')
-      .style('fill', '#333');
+      .style('fill', '#fff'); //? GPT COMMENT: Changed text color to white for better visibility on dark gray
 
     const angleStep = (2 * Math.PI) / relatedArtists.length;
     const maxDistance = 1000;
@@ -89,7 +93,7 @@ const ArtistGraph: React.FC<ArtistGraphProps> = ({
         .attr('text-anchor', 'middle')
         .attr('y', 50)
         .style('font-size', '12px')
-        .style('fill', '#333');
+        .style('fill', '#fff'); //? GPT COMMENT: Changed text color to white for better visibility on dark gray
 
       nodeGroup.transition().duration(500).ease(d3.easeLinear).attr(
         'transform',

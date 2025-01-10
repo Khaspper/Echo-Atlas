@@ -1,29 +1,36 @@
 import React, { useEffect, useState } from 'react';
 
+interface Artist {
+  name: string;
+  photoUrl: string;
+  topTracks?: { name: string; uri: string }[];
+  colorPalette?: number[][];
+}
+
 interface ArtistCardProps {
-  artist: { name: string; photoUrl: string; topTracks?: { name: string; uri: string }[]; colorPalette?: number[][] };
+  artist: Artist;
   onClose: () => void;
 }
 
 const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClose }) => {
-  const [specifiedArtist, setSpecifiedArtist] = useState<ArtistCardProps["artist"] | null>(null);
-  const [gradientColors, setGradientColors] = useState<string>('');
-  const [borderGradient, setBorderGradient] = useState<string>('');
-  const [profileBorderGradient, setProfileBorderGradient] = useState<string>('');
+  const [specifiedArtist, setSpecifiedArtist] = useState<Artist | null>(null);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [gradients, setGradients] = useState({
+    background: '',
+    border: '',
+    profileBorder: '',
+  });
 
   useEffect(() => {
     const fetchArtist = async () => {
       try {
         const response = await fetch('/api/get-artists');
         const data = await response.json();
-        const foundArtist = data.find((a: { name: string }) => a.name === artist.name);
-        setSpecifiedArtist(foundArtist);
+        const foundArtist = data.find((a: Artist) => a.name === artist.name);
+        setSpecifiedArtist(foundArtist || artist);
 
-        if (foundArtist.colorPalette) {
-          const [color1, color2] = foundArtist.colorPalette.slice(0, 2);
-          const [color3, color4] = foundArtist.colorPalette.slice(2, 4);
-          setGradientColors(`linear-gradient(to bottom right, rgba(${color1.join(',')},0.9), rgba(${color2.join(',')},0.9))`);
-          setBorderGradient(`from-[rgba(${color3.join(',')},0.9)] to-[rgba(${color4.join(',')},0.9)]`);
+        if (foundArtist?.colorPalette) {
+          setGradients(generateGradients(foundArtist.colorPalette));
         }
       } catch (error) {
         console.error('Error fetching artist:', error);
@@ -33,28 +40,35 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClose }) => {
     fetchArtist();
   }, [artist.name, artist.photoUrl]);
 
-  const handleOutsideClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (event.target === event.currentTarget) {
-      onClose();
-    }
+  const generateGradients = (colorPalette: number[][]) => {
+    const [color1, color2, color3, color4] = colorPalette;
+    return {
+      background: `linear-gradient(to bottom right, rgba(${color1.join(',')},0.9), rgba(${color2.join(',')},0.9))`,
+      border: `from-[rgba(${color3.join(',')},0.9)] to-[rgba(${color4.join(',')},0.9)]`,
+      profileBorder: `bg-gradient-to-r from-[rgba(${color3.join(',')},0.9)] to-[rgba(${color4.join(',')},0.9)]`,
+    };
   };
 
+  const toggleCollapse = () => setIsCollapsed((prev) => !prev);
+
   return (
-    <div
-      className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-lg z-50 transition-all duration-300"
-      onClick={handleOutsideClick}
-    >
-      <div className="rounded-xl shadow-2xl p-6 relative max-w-sm text-white"
-           style={{ background: gradientColors }}
+    <div className="fixed bottom-0 right-0 w-full max-w-md p-4 overflow-y-auto z-50 transition-all duration-300">
+      <div
+        className="rounded-xl shadow-2xl p-6 relative max-w-md text-white"
+        style={{ background: gradients.background }}
       >
-        <button
-          className="absolute top-2 right-4 text-2xl font-bold hover:text-red-500 transition-all"
-          onClick={onClose}
-        >
+        {/* Close Button */}
+        <button className="absolute top-2 right-4 text-2xl font-bold hover:text-red-500 transition-all" onClick={onClose}>
           &times;
         </button>
 
-        <div className={`relative w-36 h-36 mx-auto rounded-full p-1 bg-gradient-to-r ${profileBorderGradient} shadow-2xl`}> 
+        {/* Collapse Button */}
+        <button className="absolute top-2 left-4 text-2xl font-bold hover:text-blue-500 transition-all" onClick={toggleCollapse}>
+          {isCollapsed ? '+' : '-'}
+        </button>
+
+        {/* Artist Image */}
+        <div className={`relative w-36 h-36 mx-auto rounded-full p-1 ${gradients.profileBorder} shadow-2xl`}>
           <img
             src={specifiedArtist?.photoUrl || artist.photoUrl}
             alt={specifiedArtist?.name || artist.name}
@@ -62,12 +76,17 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClose }) => {
           />
         </div>
 
+        {/* Artist Name */}
         <h2 className="text-3xl font-bold text-center mt-4 tracking-wide">{specifiedArtist?.name || artist.name}</h2>
 
-        {specifiedArtist?.topTracks && specifiedArtist.topTracks.length > 0 ? (
-          <div className="mt-6">
-            <h3 className="text-lg font-semibold text-center mb-2">Top Tracks:</h3>
-            <ul className="space-y-4">
+        {/* Top Tracks Section */}
+        <div
+          className={`transition-all duration-500 ease-in-out ${
+            isCollapsed ? 'h-0 opacity-0 overflow-hidden' : 'h-auto opacity-100'
+          }`}
+        >
+          {specifiedArtist?.topTracks?.length ? (
+            <ul className="space-y-4 mt-6">
               {specifiedArtist.topTracks.map((track, index) => (
                 <li key={index} className="bg-gray-800 bg-opacity-70 p-2 rounded-lg shadow-lg">
                   <iframe
@@ -81,10 +100,10 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClose }) => {
                 </li>
               ))}
             </ul>
-          </div>
-        ) : (
-          <p className="text-center mt-4">No top tracks available.</p>
-        )}
+          ) : (
+            <p className="text-center text-sm opacity-80 mt-4">No top tracks available.</p>
+          )}
+        </div>
       </div>
     </div>
   );

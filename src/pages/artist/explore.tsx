@@ -142,29 +142,27 @@ export default function ArtistPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100">
+    <div className="flex flex-col h-screen bg-gray-900">
       {/* Header section with search bar */}
-      <div className="p-4 bg-white shadow-md">
-        <div className="flex flex-col items-center">
-          {selectedArtist ? (
-            <div className="text-center">
-              <h1 className="text-3xl font-bold">{selectedArtist}</h1>
-              <p className="text-gray-600">
-                Explore artists similar to {selectedArtist}. Click on any node to explore further.
-              </p>
-            </div>
-          ) : (
-            <h1 className="text-3xl font-bold">Artist Explorer</h1>
-          )}
-          <SearchBar placeholder="Enter artist name" onSearch={handleArtistSearch} />
-        </div>
+      <div className="p-6 bg-zinc-900 shadow-lg flex flex-col items-center text-center space-y-4">
+        {selectedArtist ? (
+          <div>
+            <h1 className="text-4xl font-extrabold text-gray-100">{selectedArtist}</h1>
+            <p className="text-lg text-gray-300 max-w-xl">
+              Explore artists similar to {selectedArtist}. Click on any node to explore further.
+            </p>
+          </div>
+        ) : (
+          <h1 className="text-4xl font-extrabold text-gray-100">Artist Explorer</h1>
+        )}
+        <SearchBar placeholder="Enter artist name" onSearch={handleArtistSearch} />
       </div>
 
       {/* Main content area where the graph is displayed */}
       <div className="flex-grow">
         {loading ? (
-          <div className="flex justify-center items-center h-full">
-            <p className="text-gray-500">Loading...</p>
+          <div className="flex justify-center items-center h-full" style={{ background: '#27272a' }}>
+            <p className="text-white text-lg">Loading...</p>
           </div>
         ) : selectedArtist && relatedArtists.length > 0 ? (
           <ArtistGraph
@@ -173,8 +171,8 @@ export default function ArtistPage() {
             centerArtistPhoto={artistPhoto}
           />
         ) : (
-          <div className="flex justify-center items-center h-full">
-            <p className="text-gray-500">Search for an artist to explore their network.</p>
+          <div className="flex justify-center items-center h-full" style={{ background: '#27272a' }}>
+            <p className="text-white text-lg">Search for an artist to explore their network.</p>
           </div>
         )}
       </div>
