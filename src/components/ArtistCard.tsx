@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import getColorPalette from '../utils/getColorPalette'; //? GPT COMMENT: Importing the getColorPalette utility to fetch colors from the artist image
+import getColorPalette from '../utils/getColorPalette';
 
 interface ArtistCardProps {
   artist: { name: string; photoUrl: string; topTracks?: { name: string; uri: string }[] };
@@ -26,7 +26,7 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClose }) => {
       try {
         const colors = await getColorPalette(artist.photoUrl);
         const [color1, color2] = colors.slice(0, 2);
-        setGradientColors(`linear-gradient(to bottom right, rgba(${color1.join(',')},0.9), rgba(${color2.join(',')},0.9))`); //? GPT COMMENT: Added transparency for better text readability.
+        setGradientColors(`linear-gradient(to bottom right, rgba(${color1.join(',')},0.9), rgba(${color2.join(',')},0.9))`);
       } catch (error) {
         console.error('Error generating gradient:', error);
       }
@@ -48,13 +48,13 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClose }) => {
       onClick={handleOutsideClick}
     >
       <div className="rounded-xl shadow-2xl p-6 relative max-w-sm text-white"
-           style={{ background: gradientColors }} //? GPT COMMENT: Applied subtle border radius, enhanced shadow, and adjusted text color for contrast.
+           style={{ background: gradientColors }}
       >
         <button
-          className="absolute top-2 right-2 text-xl font-bold hover:text-red-500 transition-all"
+          className="absolute top-2 right-4 text-2xl font-bold hover:text-red-500 transition-all"
           onClick={onClose}
         >
-          ✖
+          &times;
         </button>
         <img
           src={specifiedArtist?.photoUrl || artist.photoUrl}

@@ -34,7 +34,7 @@ const ArtistSchema = new Schema<IArtist>({
     photoUrl: { type: String, required: true },
     relatedArtists: [RelatedArtistSchema],
     topTracks: [TopTrackSchema],
-    colorPalette: { type: [[Number]], required: true },
+    colorPalette: { type: [[Number]] },
     createdAt: { type: Date, default: Date.now }
 });
 

@@ -20,6 +20,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return res.status(400).json({ error: 'All fields are required and relatedArtists and topTracks must be arrays' });
         }
 
+        // Define a default black and white gradient if no colorPalette is provided
+        const defaultColorPalette = [
+            [0, 0, 0], // Black color
+            [255, 255, 255] // White color
+        ];
+
         // Check if the artist already exists in the database
         let existingArtist = await Artist.findOne({ name });
 
@@ -35,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                                 photoUrl: artist.photoUrl,
                                 relatedArtists: [],
                                 topTracks: artist.topTracks,
-                                colorPalette: artist.colorPalette || [] 
+                                colorPalette: artist.colorPalette || defaultColorPalette 
                             });
                         }
                         return { artistId: relatedArtist._id, similarityScore: artist.similarityScore || null}; 
@@ -43,7 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 );
 
                 existingArtist.relatedArtists = relatedArtistsRefs;
-                existingArtist.colorPalette = colorPalette; 
+                existingArtist.colorPalette = colorPalette || defaultColorPalette; 
                 await existingArtist.save();
                 return res.status(200).json({ message: 'Related artists updated successfully!', artist: existingArtist });
             }
@@ -60,7 +66,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                         photoUrl: artist.photoUrl,
                         relatedArtists: [],
                         topTracks: artist.topTracks,
-                        colorPalette: artist.colorPalette || [] 
+                        colorPalette: artist.colorPalette || defaultColorPalette
                     });
                 }
                 return { artistId: relatedArtist._id, similarityScore: artist.similarityScore || null }; 
@@ -76,6 +82,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 name: track.name,
                 uri: track.uri
             })),
+            colorPalette: colorPalette || defaultColorPalette
         });
 
         await newArtist.save();
@@ -83,6 +90,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     } catch (error) {
         console.error('Error saving artist:', error);
+        console.log("error", error)
         res.status(500).json({ error: 'Failed to save artist data.' });
     }
 }
