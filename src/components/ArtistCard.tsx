@@ -9,6 +9,7 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClose }) => {
   const [specifiedArtist, setSpecifiedArtist] = useState<ArtistCardProps["artist"] | null>(null);
   const [gradientColors, setGradientColors] = useState<string>('');
   const [borderGradient, setBorderGradient] = useState<string>('');
+  const [profileBorderGradient, setProfileBorderGradient] = useState<string>('');
 
   useEffect(() => {
     const fetchArtist = async () => {
@@ -18,11 +19,12 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClose }) => {
         const foundArtist = data.find((a: { name: string }) => a.name === artist.name);
         setSpecifiedArtist(foundArtist);
 
-        const [color1, color2] = foundArtist.colorPalette.slice(0, 2);
-        const [color3, color4] = foundArtist.colorPalette.slice(3, 5);
-        setGradientColors(`linear-gradient(to bottom right, rgba(${color1.join(',')},0.9), rgba(${color2.join(',')},0.9))`);
-        setBorderGradient(`from-[rgba(${color3.join(',')},0.9)] to-[rgba(${color4.join(',')},0.9)]`);
-
+        if (foundArtist.colorPalette) {
+          const [color1, color2] = foundArtist.colorPalette.slice(0, 2);
+          const [color3, color4] = foundArtist.colorPalette.slice(2, 4);
+          setGradientColors(`linear-gradient(to bottom right, rgba(${color1.join(',')},0.9), rgba(${color2.join(',')},0.9))`);
+          setBorderGradient(`from-[rgba(${color3.join(',')},0.9)] to-[rgba(${color4.join(',')},0.9)]`);
+        }
       } catch (error) {
         console.error('Error fetching artist:', error);
       }
@@ -45,7 +47,6 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClose }) => {
       <div className="rounded-xl shadow-2xl p-6 relative max-w-sm text-white"
            style={{ background: gradientColors }}
       >
-        {/* //? GPT COMMENT: Close button with hover effect for better UX */}
         <button
           className="absolute top-2 right-4 text-2xl font-bold hover:text-red-500 transition-all"
           onClick={onClose}
@@ -53,8 +54,7 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClose }) => {
           &times;
         </button>
 
-        {/* //? GPT COMMENT: Profile Image with Gradient Border for Visual Appeal */}
-        <div className={`relative w-36 h-36 mx-auto rounded-full p-1 bg-gradient-to-r ${borderGradient} shadow-lg`}>
+        <div className={`relative w-36 h-36 mx-auto rounded-full p-1 bg-gradient-to-r ${profileBorderGradient} shadow-2xl`}> 
           <img
             src={specifiedArtist?.photoUrl || artist.photoUrl}
             alt={specifiedArtist?.name || artist.name}
@@ -62,10 +62,8 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClose }) => {
           />
         </div>
 
-        {/* //? GPT COMMENT: Artist Name Centered and More Prominent */}
         <h2 className="text-3xl font-bold text-center mt-4 tracking-wide">{specifiedArtist?.name || artist.name}</h2>
 
-        {/* //? GPT COMMENT: Displaying Top Tracks Section with Cleaner Layout */}
         {specifiedArtist?.topTracks && specifiedArtist.topTracks.length > 0 ? (
           <div className="mt-6">
             <h3 className="text-lg font-semibold text-center mb-2">Top Tracks:</h3>
