@@ -31,7 +31,7 @@ const ArtistGraph: React.FC<ArtistGraphProps> = ({
     const svgSelection = d3.select<SVGSVGElement, unknown>(svgRef.current);
     svgSelection
       .attr('viewBox', `0 0 ${width} ${height}`)
-      .style('background-color', '#2c2c2c'); //? GPT COMMENT: Changed canvas background to dark gray
+      .style('background-color', '#2c2c2c');
 
     svgSelection.selectAll('*').remove();
     const svgGroup = svgSelection.append('g');
@@ -44,7 +44,7 @@ const ArtistGraph: React.FC<ArtistGraphProps> = ({
 
     const centralNode = svgGroup.append('g')
       .attr('transform', `translate(${width / 2}, ${height / 2})`)
-      .style('cursor', 'pointer') //? GPT COMMENT: Made central node clickable
+      .style('cursor', 'pointer')
       .on('click', () => setSelectedNode({ name: selectedArtist, photoUrl: centerArtistPhoto || 'https://via.placeholder.com/150' }));
 
     centralNode.append('image')
@@ -61,7 +61,7 @@ const ArtistGraph: React.FC<ArtistGraphProps> = ({
       .attr('y', 100)
       .style('font-size', '16px')
       .style('font-weight', 'bold')
-      .style('fill', '#fff'); //? GPT COMMENT: Changed text color to white for better visibility on dark gray
+      .style('fill', '#fff'); 
 
     const angleStep = (2 * Math.PI) / relatedArtists.length;
     const maxDistance = 1000;
@@ -93,8 +93,8 @@ const ArtistGraph: React.FC<ArtistGraphProps> = ({
         .attr('text-anchor', 'middle')
         .attr('y', 50)
         .style('font-size', '12px')
-        .style('fill', '#fff'); //? GPT COMMENT: Changed text color to white for better visibility on dark gray
-
+        .style('fill', '#fff'); 
+        
       nodeGroup.transition().duration(500).ease(d3.easeLinear).attr(
         'transform',
         `translate(${width / 2 + Math.cos(angle) * distance}, ${

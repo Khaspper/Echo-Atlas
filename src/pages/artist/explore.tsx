@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import SearchBar from '../../components/SearchBar';
 import ArtistGraph from '../../components/ArtistGraph';
 import { fetchRelatedArtists } from '../../services/lastfm';
@@ -7,6 +8,9 @@ import getColorPalette from '../../utils/getColorPalette';
 
 // Main component for exploring artists
 export default function ArtistPage() {
+  const router = useRouter();
+  const { query } = router.query;
+
   // State variables to store artist data and loading status
   const [selectedArtist, setSelectedArtist] = useState<string | null>(null);
   const [artistPhoto, setArtistPhoto] = useState<string | null>(null);
@@ -15,6 +19,14 @@ export default function ArtistPage() {
   >([]);
   const [topTracks, setTopTracks] = useState<{ name: string; uri: string }[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState<string>(query ? String(query) : '');
+
+  useEffect(() => {
+    if (query) {
+      setSearchTerm(String(query));
+      handleArtistSearch(String(query));
+    }
+  }, [query]);
 
   // Generate a color palette from an image URL
   const generateColorPalette = async (photoUrl: string): Promise<number[][]> => {

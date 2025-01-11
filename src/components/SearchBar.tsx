@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 
 type SearchBarProps = {
-  placeholder?: string; // Optional placeholder text
-  onSearch: (query: string) => void; // Callback to handle the search input
+  placeholder?: string;
+  onSearch: (query: string) => void;
 };
 
 const SearchBar: React.FC<SearchBarProps> = ({ placeholder = 'Search...', onSearch }) => {
   const [inputValue, setInputValue] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault(); // Prevent page refresh
+    e.preventDefault();
     if (inputValue.trim()) {
-      onSearch(inputValue); // Pass the input value to the parent
+      onSearch(inputValue);
     }
   };
 
@@ -22,7 +22,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ placeholder = 'Search...', onSear
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         placeholder={placeholder}
-        className="p-2 border border-gray-300 rounded-lg w-80"
+        className="p-2 border border-gray-300 rounded-lg w-80 text-black"
       />
       <button
         type="submit"

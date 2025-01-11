@@ -41,13 +41,14 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClose }) => {
   }, [artist.name, artist.photoUrl]);
 
   const generateGradients = (colorPalette: number[][]) => {
-    const [color1, color2, color3, color4] = colorPalette;
+    const [color1 = [0, 0, 0], color2 = [0, 0, 0], color3 = [0, 0, 0], color4 = [0, 0, 0]] = colorPalette;
+
     return {
-      background: `linear-gradient(to bottom right, rgba(${color1.join(',')},0.9), rgba(${color2.join(',')},0.9))`,
-      border: `from-[rgba(${color3.join(',')},0.9)] to-[rgba(${color4.join(',')},0.9)]`,
-      profileBorder: `bg-gradient-to-r from-[rgba(${color3.join(',')},0.9)] to-[rgba(${color4.join(',')},0.9)]`,
+        background: `linear-gradient(to bottom right, rgba(${color1.join(',')},0.9), rgba(${color2.join(',')},0.9))`,
+        border: `from-[rgba(${color3.join(',')},0.9)] to-[rgba(${color4.join(',')},0.9)]`,
+        profileBorder: `bg-gradient-to-r from-[rgba(${color3.join(',')},0.9)] to-[rgba(${color4.join(',')},0.9)]`,
     };
-  };
+};
 
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
 
