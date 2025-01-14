@@ -1,41 +1,28 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { connectToDatabase } from '../../services/mongodb';
-import Song, { ISong } from '../../models/Song';
-
-interface PopulatedSong {
-    title: string;
-    artists: {
-        name: string;
-        photoUrl: string;
-    }[];
-    albumCoverUrl: string;
-    releaseDate: Date;
-}
+import Song from '../../models/Song';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     try {
         await connectToDatabase();
 
-        // Fetch all songs with populated artists
-        const songs = await Song.find({})
+        const { title, artistName } = req.query;
+
+        const songs = await Song.find({
+            title: title as string,
+            'artists.name': artistName as string
+        })
             .populate({
                 path: 'artists',
                 select: 'name photoUrl'
             })
             .lean();
 
-        // Format the data to match the expected structure
-        const formattedSongs = songs.map(song => ({
-            title: song.title,
-            albumCoverUrl: song.albumCoverUrl || 'https://via.placeholder.com/150',
-            releaseDate: song.releaseDate,
-            artists: song.artists.map((artist: any) => ({
-                name: artist.name,
-                photoUrl: artist.photoUrl || 'https://via.placeholder.com/150'
-            }))
-        })) as PopulatedSong[];
+        if (songs.length === 0) {
+            return res.status(404).json({ error: 'No matching song found' });
+        }
 
-        res.status(200).json(formattedSongs);
+        res.status(200).json(songs);
     } catch (error) {
         console.error('Error fetching songs:', error);
         res.status(500).json({ error: 'Failed to fetch song data.' });

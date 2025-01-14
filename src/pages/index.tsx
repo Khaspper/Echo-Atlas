@@ -3,34 +3,34 @@ import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 
-const cards = [
-    { title: 'Aluna', image: '/images/aluna.jpg' },
-    { title: 'Colores', image: '/images/colores.jpg' },
-    { title: 'Oh My Gawd', image: '/images/gawd.jpg' }
-];
+// const cards = [
+//     { title: 'Aluna', image: '/images/aluna.jpg' },
+//     { title: 'Colores', image: '/images/colores.jpg' },
+//     { title: 'Oh My Gawd', image: '/images/gawd.jpg' }
+// ];
 
-const FloatingCards = React.memo(() => (
-    <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
-        {cards.map((card, index) => (
-            <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 50, rotate: Math.random() * 20 - 10 }}
-                animate={{ opacity: 1, y: [50, -50, 50], rotate: Math.random() * 20 - 10 }}
-                transition={{ repeat: Infinity, duration: Math.random() * 10 + 5 }}
-                className="absolute"
-                style={{ top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%` }}
-            >
-                <Image
-                    src={card.image}
-                    alt={card.title}
-                    width={250}
-                    height={250}
-                    className="rounded-lg shadow-lg"
-                />
-            </motion.div>
-        ))}
-    </div>
-));
+// const FloatingCards = React.memo(() => (
+//     <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
+//         {cards.map((card, index) => (
+//             <motion.div
+//                 key={index}
+//                 initial={{ opacity: 0, y: 50, rotate: Math.random() * 20 - 10 }}
+//                 animate={{ opacity: 1, y: [50, -50, 50], rotate: Math.random() * 20 - 10 }}
+//                 transition={{ repeat: Infinity, duration: Math.random() * 10 + 5 }}
+//                 className="absolute"
+//                 style={{ top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%` }}
+//             >
+//                 <Image
+//                     src={card.image}
+//                     alt={card.title}
+//                     width={250}
+//                     height={250}
+//                     className="rounded-lg shadow-lg"
+//                 />
+//             </motion.div>
+//         ))}
+//     </div>
+// ));
 
 export default function Home() {
     const router = useRouter();
@@ -66,7 +66,7 @@ export default function Home() {
             </div>
 
             {/* Floating Cards Section */}
-            <FloatingCards />
+            {/* <FloatingCards /> */}
         </div>
     );
 }

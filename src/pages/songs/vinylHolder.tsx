@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Vinyl from './vinyls';
+import { searchSong } from '@/services/spotify';
 
 interface VinylHolderProps {
     songName: string;
@@ -10,10 +11,17 @@ const VinylHolder: React.FC<VinylHolderProps> = ({ songName, artistName }) => {
     const [songs, setSongs] = useState<{ songName: string; photoUrl: string }[]>([]);
 
     useEffect(() => {
-        if (songName && artistName) {
-            // Simulate fetching data
-            setSongs([{ songName, photoUrl: 'https://via.placeholder.com/150' }]);
-        }
+        const fetchSong = async () => {
+            try {
+                const song = await searchSong(songName, artistName);
+                console.log('Fetched Song:', song);
+                // setSongs([{ songName: song.name, photoUrl: song.photoUrl }]);
+            } catch (error) {
+                console.error('Error fetching song:', error);
+            }
+        };
+
+        fetchSong();
     }, [songName, artistName]);
 
     return (

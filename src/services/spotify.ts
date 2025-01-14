@@ -82,3 +82,42 @@ export const fetchArtistDetails = async (artistName: string) => {
     throw error;
   }
 };
+
+/**
+ * Search for a song given the song name and the artist's name using the Spotify API.
+ * @param songName Name of the song to search for
+ * @param artistName Name of the artist to search for
+ */
+export const searchSong = async (songName: string, artistName: string) => {
+  await ensureToken();
+
+  try {
+    const response = await axios.get(`${SPOTIFY_API_BASE_URL}/search`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      params: {
+        q: `${songName} artist:${artistName}`,
+        type: 'track',
+        limit: 1,
+      },
+    });
+
+    if (response.data.tracks.items.length === 0) {
+      throw new Error(`No song found for: ${songName} by ${artistName}`);
+    }
+
+    const song = response.data.tracks.items[0];
+
+    return {
+      name: song.name,
+      uri: song.uri,
+      album: song.album.name,
+      artist: song.artists.map((artist: any) => artist.name).join(', '),
+      imageURL: song.album.images[0]?.url || '',
+    };
+  } catch (error: any) {
+    console.error(`Failed to fetch song details: ${error.message}`);
+    throw error;
+  }
+};

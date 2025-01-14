@@ -5,6 +5,7 @@ import VinylHolder from './vinylHolder';
 const HomePage = () => {
     const [songName, setSongName] = useState('');
     const [artistName, setArtistName] = useState('');
+    const [searchTriggered, setSearchTriggered] = useState(false);
 
     const handleSongChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSongName(event.target.value);
@@ -15,8 +16,7 @@ const HomePage = () => {
     };
 
     const handleSearch = () => {
-        setSongName(songName.trim());
-        setArtistName(artistName.trim());
+        setSearchTriggered(true);
     };
 
     const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -56,8 +56,8 @@ const HomePage = () => {
             </div>
 
             <div className="flex justify-center items-center h-screen w-screen">
-                {/* Vinyl Holder now receives songName and artistName as props */}
-                <VinylHolder songName={songName} artistName={artistName} />
+                {/* Vinyl Holder always shows but updates only when search is pressed */}
+                <VinylHolder songName={searchTriggered ? songName.trim() : ''} artistName={searchTriggered ? artistName.trim() : ''} />
                 <VinylPlayer />
             </div>
         </div>
