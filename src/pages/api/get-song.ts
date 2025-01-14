@@ -9,14 +9,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const { title, artistName } = req.query;
 
         const songs = await Song.find({
-            title: title as string,
-            'artists.name': artistName as string
-        })
-            .populate({
-                path: 'artists',
-                select: 'name photoUrl'
-            })
-            .lean();
+            title: { $regex: new RegExp(title as string, 'i') },
+            artistName: { $regex: new RegExp(artistName as string, 'i') }
+        }).lean();
 
         if (songs.length === 0) {
             return res.status(404).json({ error: 'No matching song found' });

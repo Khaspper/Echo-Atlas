@@ -9,14 +9,18 @@ const HomePage = () => {
 
     const handleSongChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSongName(event.target.value);
+        setSearchTriggered(false); // Reset trigger when typing
     };
 
     const handleArtistChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setArtistName(event.target.value);
+        setSearchTriggered(false); // Reset trigger when typing
     };
 
     const handleSearch = () => {
-        setSearchTriggered(true);
+        if (songName.trim() && artistName.trim()) {
+            setSearchTriggered(true);
+        }
     };
 
     const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -56,8 +60,12 @@ const HomePage = () => {
             </div>
 
             <div className="flex justify-center items-center h-screen w-screen">
-                {/* Vinyl Holder always shows but updates only when search is pressed */}
-                <VinylHolder songName={searchTriggered ? songName.trim() : ''} artistName={searchTriggered ? artistName.trim() : ''} />
+                {/* Now properly passing searchTriggered prop */}
+                <VinylHolder
+                    songName={songName.trim()}
+                    artistName={artistName.trim()}
+                    searchTriggered={searchTriggered}
+                />
                 <VinylPlayer />
             </div>
         </div>

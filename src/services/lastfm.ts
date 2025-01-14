@@ -48,7 +48,7 @@ export const fetchSimilarSongs = async (trackName: string, artistName: string) =
         artist: artistName,
         api_key: API_KEY,
         format: 'json',
-        limit: 20,
+        limit: 2,
       },
     });
 

@@ -10,7 +10,6 @@ export interface ISong extends Document {
     photoUrl: string;
     spotifyUri: string;
     similarSongs: ISimilarSong[];
-    createdAt: Date;
 }
 
 const SimilarSongSchema = new Schema<ISimilarSong>({
@@ -23,7 +22,6 @@ const SongSchema = new Schema<ISong>({
     photoUrl: { type: String, required: true },
     spotifyUri: { type: String, required: true },
     similarSongs: [SimilarSongSchema],
-    createdAt: { type: Date, default: Date.now }
 });
 
 // Ensure the model is not recompiled when imported multiple times
