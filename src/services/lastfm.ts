@@ -38,3 +38,31 @@ export const fetchRelatedArtists = async (artistName: string) => {
     throw new Error('Failed to fetch related artists');
   }
 };
+
+export const fetchSimilarSongs = async (trackName: string, artistName: string) => {
+  try {
+    const response = await axios.get(BASE_URL, {
+      params: {
+        method: 'track.getsimilar',
+        track: trackName,
+        artist: artistName,
+        api_key: API_KEY,
+        format: 'json',
+        limit: 20,
+      },
+    });
+
+    const similarTracks = response.data?.similartracks?.track || [];
+    let formattedTracks = similarTracks.map((track: any) => ({
+      name: track.name,
+      artist: track.artist.name,
+      photoUrl: track.image?.[2]?.['#text'] || 'https://via.placeholder.com/60?text=Track',
+      similarityScore: parseFloat(track.match || 0),
+    }));
+
+    return formattedTracks;
+  } catch (error) {
+    console.error('Error fetching similar songs:', error);
+    throw new Error('Failed to fetch similar songs');
+  }
+};
