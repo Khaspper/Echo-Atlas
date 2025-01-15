@@ -28,6 +28,54 @@ const VinylHolder: React.FC<VinylHolderProps> = ({ songName, artistName, searchT
                 let response;
                 try {
                     response = await axios.get(`/api/get-song?title=${encodeURIComponent(songName)}&artistName=${encodeURIComponent(artistName)}`);
+                    if (response.data && response.data.length > 0) {
+                        const fetchedSongs = response.data.map((song: any) => ({ name: song.title, photoUrl: song.photoUrl }));
+                        setSongs(fetchedSongs);
+
+                        await Promise.all(response.data.map(async (song: any) => {
+                            if (song.similarSongs.length === 0) {
+                                console.log('similar Songs array is empty');
+                                const songsFromLastFm = await fetchSimilarSongs(song.title, song.artistName);
+                            
+                                const updatedSimilarSongs = await Promise.all(
+                                    songsFromLastFm.map(async (similarSong: Song) => {
+                                        try {
+                                            const fetchedSong = await searchSong(similarSong.name, similarSong.artist || song.artistName);
+                                            const formattedSong = {
+                                                title: fetchedSong.name,
+                                                artistName: fetchedSong.artist,
+                                                photoUrl: fetchedSong.imageURL,
+                                                spotifyUri: fetchedSong.uri,
+                                                similarSongs: [],
+                                            };
+                                            await axios.post('/api/save-song', formattedSong);
+                                            return formattedSong;
+                                        } catch (error) {
+                                            console.error(`Error fetching details for ${similarSong.name}:`, error);
+                                            return {
+                                                songId: null,
+                                                colorPalette: null
+                                            };
+                                        }
+                                    })
+                                );
+                            
+                                const searchedSong = {
+                                    title: song.title,
+                                    artistName: song.artistName,
+                                    photoUrl: song.photoUrl,
+                                    spotifyUri: song.spotifyUri,
+                                    similarSongs: updatedSimilarSongs.filter(song => song.songId !== null)
+                                };
+                            
+                                await axios.post('/api/save-song', searchedSong);
+                            
+                                setSongs(updatedSimilarSongs.map((song) => ({ name: song.name, photoUrl: song.photoUrl })));
+                                return;
+                            }
+                            
+                        }));
+                    }
                 } catch (error) {
                     if (axios.isAxiosError(error) && error.response?.status === 404) {
                         console.log('Song not found in database, searching via API...');
@@ -42,22 +90,23 @@ const VinylHolder: React.FC<VinylHolderProps> = ({ songName, artistName, searchT
                                     title: fetchedSong.name,
                                     artistName: fetchedSong.artist,
                                     photoUrl: fetchedSong.imageURL,
-                                    spotifyUri: fetchedSong.uri
+                                    spotifyUri: fetchedSong.uri,
+                                    similarSongs: [],
                                 };
                                 const savedSong = await axios.post('/api/save-song', formattedSong);
-                                return savedSong.data.song._id;  // Only returning the ObjectId here
+                                return savedSong.data.song._id;
                             })
                         );
 
-                        // Saving the searched song along with the similar songs using ObjectId references
                         const searchedSong = {
                             title: song.name,
                             artistName: song.artist,
                             photoUrl: song.imageURL,
                             spotifyUri: song.uri,
-                            similarSongs: fetchedSimilarSongs.map(songId => ({ songId: songId }))  // ObjectId references only
+                            similarSongs: fetchedSimilarSongs.map(songId => ({ songId }))
                         };
 
+                        console.log("searchedSong: ", searchedSong)
                         await axios.post('/api/save-song', searchedSong);
 
                         setSongs(similarSongs.map((song: Song) => ({ name: song.name, photoUrl: song.photoUrl })));
@@ -66,13 +115,6 @@ const VinylHolder: React.FC<VinylHolderProps> = ({ songName, artistName, searchT
                         throw error;
                     }
                 }
-
-                if (response.data && response.data.length > 0) {
-                    console.log('Song found in the database:', response.data);
-                    setSongs(response.data.map((song: any) => ({ name: song.title, photoUrl: song.photoUrl })));
-                    return;
-                }
-
             } catch (error) {
                 console.error('Error fetching similar songs or saving song:', error);
             }

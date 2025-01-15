@@ -8,7 +8,6 @@ import getColorPalette from '../../utils/getColorPalette';
 
 // Main component for exploring artists
 export default function ArtistPage() {
-  const router = useRouter();
 
   // State variables to store artist data and loading status
   const [selectedArtist, setSelectedArtist] = useState<string | null>(null);
