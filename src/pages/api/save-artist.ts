@@ -27,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ];
 
         // Check if the artist already exists in the database
-        let existingArtist = await Artist.findOne({ name });
+        const existingArtist = await Artist.findOne({ name });
 
         // If the artist exists, update their related artists only if the array is empty
         if (existingArtist) {

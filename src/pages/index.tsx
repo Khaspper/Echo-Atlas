@@ -1,7 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/router';
-import { motion } from 'framer-motion';
-import Image from 'next/image';
 
 // const cards = [
 //     { title: 'Aluna', image: '/images/aluna.jpg' },

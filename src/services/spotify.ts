@@ -11,76 +11,104 @@ const SPOTIFY_API_BASE_URL = 'https://api.spotify.com/v1';
 let accessToken: string | null = null;
 let tokenExpiry: number | null = null;
 
+// Define proper types for artists and tracks
+interface SpotifyImage {
+    url: string;
+}
+
+interface SpotifyTrack {
+    name: string;
+    uri: string;
+    album: { name: string; images: SpotifyImage[] };
+    artists: { name: string }[];
+}
+
+interface SpotifyArtist {
+    id: string;
+    name: string;
+    images: SpotifyImage[];
+}
+
+interface FormattedTrack {
+    name: string;
+    uri: string;
+}
+
+interface FormattedArtist {
+    id: string;
+    name: string;
+    imageURL: string;
+    topTracks: FormattedTrack[];
+}
+
 const fetchAccessToken = async (): Promise<void> => {
-  const authString = Buffer.from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`).toString('base64');
+    const authString = Buffer.from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`).toString('base64');
 
-  const response = await axios.post(SPOTIFY_AUTH_URL, 'grant_type=client_credentials', {
-    headers: {
-      Authorization: `Basic ${authString}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-  });
+    const response = await axios.post(SPOTIFY_AUTH_URL, 'grant_type=client_credentials', {
+        headers: {
+            Authorization: `Basic ${authString}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+    });
 
-  accessToken = response.data.access_token;
-  tokenExpiry = Date.now() + response.data.expires_in * 1000; // Calculate token expiry time
+    accessToken = response.data.access_token;
+    tokenExpiry = Date.now() + response.data.expires_in * 1000; // Calculate token expiry time
 };
 
 const ensureToken = async (): Promise<void> => {
-  if (!accessToken || (tokenExpiry && Date.now() > tokenExpiry)) {
-    await fetchAccessToken();
-  }
+    if (!accessToken || (tokenExpiry && Date.now() > tokenExpiry)) {
+        await fetchAccessToken();
+    }
 };
 
 /**
  * Search for an artist by name, fetch details including their image and top 3 tracks.
  * @param artistName Name of the artist to search for
  */
-export const fetchArtistDetails = async (artistName: string) => {
-  await ensureToken();
+export const fetchArtistDetails = async (artistName: string): Promise<FormattedArtist> => {
+    await ensureToken();
 
-  try {
-    const response = await axios.get(`${SPOTIFY_API_BASE_URL}/search`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-      params: {
-        q: artistName,
-        type: 'artist',
-        limit: 1,
-      },
-    });
+    try {
+        const response = await axios.get(`${SPOTIFY_API_BASE_URL}/search`, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+            params: {
+                q: artistName,
+                type: 'artist',
+                limit: 1,
+            },
+        });
 
-    if (response.data.artists.items.length === 0) {
-      throw new Error(`No artist found for name: ${artistName}`);
+        const artist: SpotifyArtist | undefined = response.data.artists.items[0];
+
+        if (!artist) {
+            throw new Error(`No artist found for name: ${artistName}`);
+        }
+
+        // Fetch top tracks for the artist and return only the URI and name
+        const topTracksResponse = await axios.get(`${SPOTIFY_API_BASE_URL}/artists/${artist.id}/top-tracks`, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+            params: { market: 'US' },
+        });
+
+        const topTracks: FormattedTrack[] = topTracksResponse.data.tracks.slice(0, 3).map((track: SpotifyTrack) => ({
+            name: track.name,
+            uri: track.uri,
+        }));
+
+        return {
+            id: artist.id,
+            name: artist.name,
+            imageURL: artist.images[0]?.url || '',
+            topTracks,
+        };
+    } catch (error) {
+        console.error(`Failed to fetch artist details: ${(error as Error).message}`);
+        throw error;
     }
-
-    const artist = response.data.artists.items[0];
-
-    // Fetch top tracks for the artist and only return uri
-    const topTracksResponse = await axios.get(`${SPOTIFY_API_BASE_URL}/artists/${artist.id}/top-tracks`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-      params: {
-        market: 'US',
-      },
-    });
-
-    const topTracks = topTracksResponse.data.tracks.slice(0, 3).map((track: any) => ({
-      name: track.name,
-      uri: track.uri, // Only saving the URI instead of the full object
-    }));
-
-    return {
-      id: artist.id,
-      name: artist.name,
-      imageURL: artist.images[0]?.url || '',
-      topTracks, // Now returning only name and URI
-    };
-  } catch (error: any) {
-    console.error(`Failed to fetch artist details: ${error.message}`);
-    throw error;
-  }
 };
 
 /**
@@ -88,36 +116,39 @@ export const fetchArtistDetails = async (artistName: string) => {
  * @param songName Name of the song to search for
  * @param artistName Name of the artist to search for
  */
-export const searchSong = async (songName: string, artistName: string) => {
-  await ensureToken();
+export const searchSong = async (
+    songName: string,
+    artistName: string
+): Promise<FormattedTrack & { album: string; artist: string; imageURL: string }> => {
+    await ensureToken();
 
-  try {
-    const response = await axios.get(`${SPOTIFY_API_BASE_URL}/search`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-      params: {
-        q: `${songName} artist:${artistName}`,
-        type: 'track',
-        limit: 1,
-      },
-    });
+    try {
+        const response = await axios.get(`${SPOTIFY_API_BASE_URL}/search`, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+            params: {
+                q: `${songName} artist:${artistName}`,
+                type: 'track',
+                limit: 1,
+            },
+        });
 
-    if (response.data.tracks.items.length === 0) {
-      throw new Error(`No song found for: ${songName} by ${artistName}`);
+        const song: SpotifyTrack | undefined = response.data.tracks.items[0];
+
+        if (!song) {
+            throw new Error(`No song found for: ${songName} by ${artistName}`);
+        }
+
+        return {
+            name: song.name,
+            uri: song.uri,
+            album: song.album.name,
+            artist: song.artists.map((artist) => artist.name).join(', '),
+            imageURL: song.album.images[0]?.url || '',
+        };
+    } catch (error) {
+        console.error(`Failed to fetch song details: ${(error as Error).message}`);
+        throw error;
     }
-
-    const song = response.data.tracks.items[0];
-
-    return {
-      name: song.name,
-      uri: song.uri,
-      album: song.album.name,
-      artist: song.artists.map((artist: any) => artist.name).join(', '),
-      imageURL: song.album.images[0]?.url || '',
-    };
-  } catch (error: any) {
-    console.error(`Failed to fetch song details: ${error.message}`);
-    throw error;
-  }
 };

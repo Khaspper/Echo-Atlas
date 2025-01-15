@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 interface Artist {
   name: string;
@@ -25,8 +26,8 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClose }) => {
     const fetchArtist = async () => {
       try {
         const response = await fetch('/api/get-artists');
-        const data = await response.json();
-        const foundArtist = data.find((a: Artist) => a.name === artist.name);
+        const data: Artist[] = await response.json();
+        const foundArtist = data.find((a) => a.name === artist.name);
         setSpecifiedArtist(foundArtist || artist);
 
         if (foundArtist?.colorPalette) {
@@ -38,17 +39,20 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClose }) => {
     };
 
     fetchArtist();
-  }, [artist.name, artist.photoUrl]);
+  }, [artist]); // Fixed the dependency array
 
   const generateGradients = (colorPalette: number[][]) => {
-    const [color1 = [0, 0, 0], color2 = [0, 0, 0], color3 = [0, 0, 0], color4 = [0, 0, 0]] = colorPalette;
+    const defaultColors = [
+      [255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 0]
+    ];
+    const [color1, color2, color3, color4] = colorPalette.length >= 4 ? colorPalette : defaultColors;
 
     return {
-        background: `linear-gradient(to bottom right, rgba(${color1.join(',')},0.9), rgba(${color2.join(',')},0.9))`,
-        border: `from-[rgba(${color3.join(',')},0.9)] to-[rgba(${color4.join(',')},0.9)]`,
-        profileBorder: `bg-gradient-to-r from-[rgba(${color3.join(',')},0.9)] to-[rgba(${color4.join(',')},0.9)]`,
+      background: `linear-gradient(to bottom right, rgba(${color1.join(',')},0.9), rgba(${color2.join(',')},0.9))`,
+      border: `from-[rgba(${color3.join(',')},0.9)] to-[rgba(${color4.join(',')},0.9)]`,
+      profileBorder: `bg-gradient-to-r from-[rgba(${color3.join(',')},0.9)] to-[rgba(${color4.join(',')},0.9)]`,
     };
-};
+  };
 
   const toggleCollapse = () => setIsCollapsed((prev) => !prev);
 
@@ -70,10 +74,12 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClose }) => {
 
         {/* Artist Image */}
         <div className={`relative w-36 h-36 mx-auto rounded-full p-1 ${gradients.profileBorder} shadow-2xl`}>
-          <img
+          <Image
             src={specifiedArtist?.photoUrl || artist.photoUrl}
             alt={specifiedArtist?.name || artist.name}
-            className="w-full h-full object-cover rounded-full"
+            width={144}
+            height={144}
+            className="rounded-full"
           />
         </div>
 
@@ -97,7 +103,7 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClose }) => {
                     frameBorder="0"
                     allow="encrypted-media"
                     className="rounded-lg"
-                  ></iframe>
+                  />
                 </li>
               ))}
             </ul>

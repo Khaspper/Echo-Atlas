@@ -1,5 +1,3 @@
-import React, { useEffect } from 'react';
-
 const VinylPlayer: React.FC = () => {
 
     return (

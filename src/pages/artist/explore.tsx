@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
+import React, { useState } from 'react';
 import SearchBar from '../../components/SearchBar';
 import ArtistGraph from '../../components/ArtistGraph';
 import { fetchRelatedArtists } from '../../services/lastfm';
