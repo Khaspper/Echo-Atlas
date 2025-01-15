@@ -62,10 +62,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // If the song is new, create and save it along with similar songs
         const similarSongsRefs = await Promise.all(
             similarSongs.map(async (song: { title: string; artistName: string; photoUrl: string; spotifyUri: string }) => {
-                console.log('7')
-                let similarSong = await Song.findOne({ title: song.title, artistName: song.artistName });
-                console.log('9')
-                res.status(200).json({ message: 'Similar songs updated successfully!', song: existingSong });
+                return song
             })
         );
         
