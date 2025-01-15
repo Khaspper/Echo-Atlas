@@ -28,7 +28,7 @@ export const fetchRelatedArtists = async (artistName: string): Promise<Formatted
                 artist: artistName,
                 api_key: API_KEY,
                 format: 'json',
-                limit: 30, //! Number of artists to fetch
+                limit: 10, //! Number of artists to fetch
             },
         });
 
