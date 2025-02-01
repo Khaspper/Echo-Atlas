@@ -64,10 +64,6 @@ Echo-Atlas is an interactive web application that allows users to explore music 
 - Uses D3.js to render a dynamic graph of artists.
 - Allows zoom, pan, and click interactions.
 
-### **Vinyl Holder (`VinylHolder.tsx`)**
-- Fetches and displays songs related to a searched artist.
-- Integrates with `Vinyl.tsx` to visually represent records.
-
 ### **Explore Page (`explore.tsx`)**
 - Handles user searches and fetches artist data dynamically.
 - Displays the artist graph and vinyl records.
